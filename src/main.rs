@@ -1,3 +1,12 @@
+mod StateItem;
+mod StartupStateItem;
+pub mod StateManager;
+mod AuthenticationStateItem;
+mod Transition;
+mod MainMenuStateItem;
+
 fn main() {
-    println!("Hello, world!");
+
+   let mut state_manager = StateManager::StateManager::new();
+   state_manager.run();
 }
