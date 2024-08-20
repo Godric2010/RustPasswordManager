@@ -1,8 +1,8 @@
-use crate::AuthenticationStateItem::AuthenticationStateItem;
-use crate::MainMenuStateItem::MainMenuStateItem;
-use crate::StartupStateItem::StartupStateItem;
-use crate::StateItem::StateItem;
-use crate::Transition::Transition;
+use crate::authentication_state_item::AuthenticationStateItem;
+use crate::main_menu_state_item::MainMenuStateItem;
+use crate::startup_state_item::StartupStateItem;
+use crate::state_item::StateItem;
+use crate::transition::Transition;
 
 pub struct StateManager{
 	state: Option<Box<dyn StateItem>>,
@@ -53,7 +53,6 @@ impl StateManager{
 
 	fn transition(&mut self, transition: Transition){
 		match transition {
-			Transition::ToStartup => self.transition_to(Box::new(StartupStateItem::new())),
 			Transition::ToAuthentication => self.transition_to(Box::new(AuthenticationStateItem::new())),
 			Transition::ToAddEntry => todo!(),
 			Transition::ToListEntries => todo!(),

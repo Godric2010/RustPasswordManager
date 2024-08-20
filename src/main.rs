@@ -1,12 +1,12 @@
-mod StateItem;
-mod StartupStateItem;
-pub mod StateManager;
-mod AuthenticationStateItem;
-mod Transition;
-mod MainMenuStateItem;
+mod state_item;
+mod startup_state_item;
+mod state_manager;
+mod authentication_state_item;
+mod transition;
+mod main_menu_state_item;
 
 fn main() {
 
-   let mut state_manager = StateManager::StateManager::new();
+   let mut state_manager = state_manager::StateManager::new();
    state_manager.run();
 }

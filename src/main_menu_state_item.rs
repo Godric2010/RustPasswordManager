@@ -1,5 +1,5 @@
-use crate::StateItem::StateItem;
-use crate::Transition::Transition;
+use crate::state_item::StateItem;
+use crate::transition::Transition;
 
 pub struct MainMenuStateItem {
 	next_state: Option<Transition>,

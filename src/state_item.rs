@@ -1,4 +1,4 @@
-use crate::Transition::Transition;
+use crate::transition::Transition;
 
 pub trait StateItem{
 	fn setup(&mut self);

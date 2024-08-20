@@ -1,7 +1,7 @@
 use std::thread;
 use std::time::Duration;
-use crate::StateItem::StateItem;
-use crate::Transition::Transition;
+use crate::state_item::StateItem;
+use crate::transition::Transition;
 
 enum LockState {
 	Locked,
