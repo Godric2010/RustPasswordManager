@@ -1,3 +1,4 @@
+use crate::add_entry_state_item::AddEntryStateItem;
 use crate::authentication_state_item::AuthenticationStateItem;
 use crate::main_menu_state_item::MainMenuStateItem;
 use crate::startup_state_item::StartupStateItem;
@@ -54,7 +55,7 @@ impl StateManager{
 	fn transition(&mut self, transition: Transition){
 		match transition {
 			Transition::ToAuthentication => self.transition_to(Box::new(AuthenticationStateItem::new())),
-			Transition::ToAddEntry => todo!(),
+			Transition::ToAddEntry => self.transition_to(Box::new(AddEntryStateItem::new())),
 			Transition::ToListEntries => todo!(),
 			Transition::ToSearchEntry => todo!(),
 			Transition::ToMainMenu => self.transition_to(Box::new(MainMenuStateItem::new())),

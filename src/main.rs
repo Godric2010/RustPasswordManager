@@ -4,9 +4,11 @@ mod state_manager;
 mod authentication_state_item;
 mod transition;
 mod main_menu_state_item;
+mod add_entry_state_item;
 
 fn main() {
 
    let mut state_manager = state_manager::StateManager::new();
    state_manager.run();
+   print!("{}[2J", 27 as char);
 }
