@@ -1,6 +1,8 @@
 use std::thread;
 use std::time::Duration;
+use crossterm::event::KeyCode;
 use crate::state_item::StateItem;
+use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 use crate::transition::Transition::ToMainMenu;
 
@@ -73,12 +75,12 @@ impl AddEntryStateItem {
 impl StateItem for AddEntryStateItem {
 	fn setup(&mut self) {}
 
-	fn display(&self) {
+	fn display(&self, context: &mut TerminalContext) {
 		print!("{}[2J", 27 as char);
 		self.print_state();
 	}
 
-	fn register_input(&mut self) {
+	fn register_input(&mut self, key_code: KeyCode) {
 		let mut user_input = String::new();
 
 		match self.internal_state {

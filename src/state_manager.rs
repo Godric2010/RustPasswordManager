@@ -1,18 +1,21 @@
+use std::thread;
+use std::time::Duration;
 use crate::add_entry_state_item::AddEntryStateItem;
 use crate::authentication_state_item::AuthenticationStateItem;
 use crate::main_menu_state_item::MainMenuStateItem;
 use crate::startup_state_item::StartupStateItem;
 use crate::state_item::StateItem;
+use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 
-pub struct StateManager{
+pub struct StateManager {
 	state: Option<Box<dyn StateItem>>,
-	active: bool
+	active: bool,
 }
 
-impl StateManager{
-	pub fn new() -> Self{
-		let mut sm = StateManager{
+impl StateManager {
+	pub fn new() -> Self {
+		let mut sm = StateManager {
 			state: Some(Box::new(StartupStateItem::new())),
 			active: true,
 		};
@@ -20,48 +23,49 @@ impl StateManager{
 		sm
 	}
 
-	fn setup_current_state(&mut self){
-		if let Some(state) = &mut self.state{
+	fn setup_current_state(&mut self) {
+		if let Some(state) = &mut self.state {
 			state.setup();
 		}
 	}
 
-	fn transition_to(&mut self, next_state: Box<dyn StateItem>){
-		if let Some(state) = &mut self.state{
+	fn transition_to(&mut self, next_state: Box<dyn StateItem>) {
+		if let Some(state) = &mut self.state {
 			state.shutdown();
 		}
 		self.state = Some(next_state);
 		self.setup_current_state();
 	}
 
-	pub fn run(&mut self){
-		loop{
-			if !self.active{
+	pub fn run(&mut self, context: &mut TerminalContext) {
+		loop {
+			if !self.active {
 				break;
 			}
 
-			if let Some(state) = &mut self.state{
-				state.display();
-				state.register_input();
-
-				if let Some(transition) = state.next_state(){
-
-					self.transition(transition)
+			if let Some(state) = &mut self.state {
+				context.clear_screen();
+				state.display(context);
+				if let Some(transition) = state.next_state() {
+					self.transition(transition);
+					continue;
+				}
+				if let Some(key_code) = context.read_input() {
+					state.register_input(key_code);
 				}
 			}
 		}
 	}
 
-	fn transition(&mut self, transition: Transition){
+	fn transition(&mut self, transition: Transition) {
 		match transition {
 			Transition::ToAuthentication => self.transition_to(Box::new(AuthenticationStateItem::new())),
 			Transition::ToAddEntry => self.transition_to(Box::new(AddEntryStateItem::new())),
 			Transition::ToListEntries => todo!(),
-			Transition::ToSearchEntry => todo!(),
+			Transition::ToChangeAuthentication => todo!(),
+			Transition::ToGetAccount => todo!(),
 			Transition::ToMainMenu => self.transition_to(Box::new(MainMenuStateItem::new())),
 			Transition::ToExit => self.active = false,
 		}
 	}
-
-
 }

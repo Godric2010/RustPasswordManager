@@ -1,14 +1,38 @@
+use crossterm::event::KeyCode;
 use crate::state_item::StateItem;
+use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 
 pub struct MainMenuStateItem {
 	next_state: Option<Transition>,
+	menu_items: Vec<String>,
+	menu_transitions: Vec<Transition>,
+	selected_item: u8,
 }
 
 impl MainMenuStateItem {
 	pub fn new() -> Self {
+		let menu_items = vec![
+			"[1] Add new account".to_string(),
+			"[2] Get Account".to_string(),
+			"[3] List all accounts".to_string(),
+			"[4] Set new master password".to_string(),
+			"[5] Exit".to_string(),
+		];
+
+		let menu_transitions = vec![
+			Transition::ToAddEntry,
+			Transition::ToGetAccount,
+			Transition::ToListEntries,
+			Transition::ToChangeAuthentication,
+			Transition::ToExit
+		];
+
 		MainMenuStateItem {
 			next_state: None,
+			menu_items,
+			selected_item: 0,
+			menu_transitions,
 		}
 	}
 }
@@ -16,26 +40,53 @@ impl MainMenuStateItem {
 impl StateItem for MainMenuStateItem {
 	fn setup(&mut self) {}
 
-	fn display(&self) {
-		println!("Main Menu");
-		println!("[1] Add new account");
-		println!("[2] List all accounts");
-		println!("[3] Search for account");
-		println!("[4] Set new master password");
-		println!("[5] Exit")
+	fn display(&self, context: &mut TerminalContext) {
+		let heading = "Main Menu";
+
+		let y_start_pos = context.get_height() / 2 - 4;
+		let x_menu_pos = (context.get_width() - heading.len() as u16) / 2;
+
+		context.print_at_position(x_menu_pos, y_start_pos, heading);
+		for (index, text) in self.menu_items.iter().enumerate() {
+			let mut content = String::new();
+			if self.selected_item == index as u8 {
+				content.push_str("* ");
+			}
+			content.push_str(text);
+			context.print_at_position(0, y_start_pos + 2 + index as u16, content.as_str());
+		}
 	}
-
-	fn register_input(&mut self) {
-		let mut user_input = String::new();
-		std::io::stdin().read_line(&mut user_input).unwrap();
-
-		match user_input.trim() {
-			"1" => self.next_state = Some(Transition::ToAddEntry),
-			"2" => self.next_state = Some(Transition::ToListEntries),
-			"3" => self.next_state = Some(Transition::ToSearchEntry),
-			"4" => println!("Setting master password coming soon!"),
-			"5" => self.next_state = Some(Transition::ToExit),
-			_ => println!("Invalid input! Please enter a number to select a menu item.")
+	fn register_input(&mut self, key_code: KeyCode) {
+		match key_code {
+			KeyCode::Char(c) => {
+				if c.is_numeric() {
+					let mut digit = c.to_digit(10).expect("Cannot convert char to digit");
+					if digit >= self.menu_items.len() as u32 {
+						digit = self.menu_items.len() as u32
+					}
+					self.selected_item = digit as u8 - 1;
+				}
+			}
+			KeyCode::Enter => {
+				let item_index = self.selected_item as usize;
+				let transition = self.menu_transitions[item_index].clone();
+				self.next_state = Some(transition);
+			}
+			KeyCode::Up => {
+				if self.selected_item == 0 {
+					self.selected_item = self.menu_items.len() as u8 - 1;
+				} else {
+					self.selected_item -= 1;
+				}
+			}
+			KeyCode::Down => {
+				if self.selected_item == self.menu_items.len() as u8 - 1 {
+					self.selected_item = 0;
+				} else {
+					self.selected_item += 1;
+				}
+			}
+			_ => (),
 		}
 	}
 

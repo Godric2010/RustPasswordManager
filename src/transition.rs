@@ -1,9 +1,10 @@
 #[derive(Clone)]
 pub enum Transition{
 	ToAuthentication,
+	ToChangeAuthentication,
 	ToMainMenu,
 	ToAddEntry,
-	ToSearchEntry,
+	ToGetAccount,
 	ToListEntries,
 	ToExit,
 }

@@ -1,9 +1,11 @@
+use crossterm::event::KeyCode;
+use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 
 pub trait StateItem{
 	fn setup(&mut self);
-	fn display(&self);
-	fn register_input(&mut self);
+	fn display(&self, context: &mut TerminalContext);
+	fn register_input(&mut self, key_code: KeyCode);
 	fn shutdown(&mut self){
 		print!("{}[2J", 27 as char);
 	}
