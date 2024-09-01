@@ -28,7 +28,7 @@ impl TerminalContext {
 	pub fn destroy(&mut self) {
 		self.clear_screen();
 		match execute!(self.stdout, terminal::LeaveAlternateScreen, cursor::Show) {
-			Ok(c) => (),
+			Ok(_) => (),
 			Err(e) => panic!("Could not destroy context! {}", e),
 		};
 		let _ = disable_raw_mode();
@@ -73,7 +73,7 @@ impl TerminalContext {
 				}
 			}
 			Ok(_) => None,
-			Err(e) => None,
+			Err(_) => None,
 		};
 
 		let _ = disable_raw_mode();

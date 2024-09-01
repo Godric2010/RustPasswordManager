@@ -4,7 +4,7 @@ use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 
 use crate::input_handler::*;
-use crate::transition::Transition::{ToExit, ToMainMenu};
+use crate::transition::Transition::{ToExit};
 
 pub struct SetAuthenticationStateItem {
 	next_state: Option<Transition>,
