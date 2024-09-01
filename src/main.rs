@@ -1,10 +1,6 @@
-use std::io;
-use std::io::stdout;
-use crossterm::{cursor, execute, terminal, Command, ExecutableCommand};
-use crossterm::event::MouseEventKind::ScrollUp;
-use crossterm::style::{Print, PrintStyledContent};
-use crossterm::terminal::{size, ClearType, SetSize};
 use crate::terminal_context::TerminalContext;
+use crossterm::terminal::size;
+use crossterm::{Command, ExecutableCommand};
 
 mod state_item;
 mod startup_state_item;

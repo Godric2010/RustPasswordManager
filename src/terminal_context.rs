@@ -1,8 +1,8 @@
-use std::io::{stdout, Stdout, Write};
-use crossterm::{ExecutableCommand, execute, terminal::{self, ClearType}, cursor, style::{self, PrintStyledContent}, event};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use crossterm::style::Print;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use crossterm::{cursor, event, execute, terminal::{self, ClearType}, ExecutableCommand};
+use std::io::{stdout, Stdout, Write};
 
 pub struct TerminalContext {
 	stdout: Stdout,
@@ -50,7 +50,7 @@ impl TerminalContext {
 			panic!("Position exceeds context width or height!");
 		}
 
-		self.stdout.execute(cursor::MoveTo(x, y)).expect("Could not move cursor!");
+		self.stdout.execute(cursor::MoveTo(/*self.origin_x +*/ x, /*self.origin_y +*/ y)).expect("Could not move cursor!");
 		self.stdout.execute(Print(content)).expect("Could not print text!");
 	}
 

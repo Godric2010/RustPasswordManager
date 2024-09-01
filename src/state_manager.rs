@@ -1,5 +1,3 @@
-use std::thread;
-use std::time::Duration;
 use crate::add_entry_state_item::AddEntryStateItem;
 use crate::authentication_state_item::AuthenticationStateItem;
 use crate::main_menu_state_item::MainMenuStateItem;
