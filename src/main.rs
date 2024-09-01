@@ -10,6 +10,8 @@ mod transition;
 mod main_menu_state_item;
 mod add_entry_state_item;
 mod terminal_context;
+mod set_authentication_state_item;
+mod input_handler;
 
 fn main(){
 

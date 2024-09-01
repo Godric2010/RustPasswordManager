@@ -1,6 +1,7 @@
 use crate::add_entry_state_item::AddEntryStateItem;
 use crate::authentication_state_item::AuthenticationStateItem;
 use crate::main_menu_state_item::MainMenuStateItem;
+use crate::set_authentication_state_item::SetAuthenticationStateItem;
 use crate::startup_state_item::StartupStateItem;
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
@@ -60,7 +61,7 @@ impl StateManager {
 			Transition::ToAuthentication => self.transition_to(Box::new(AuthenticationStateItem::new())),
 			Transition::ToAddEntry => self.transition_to(Box::new(AddEntryStateItem::new())),
 			Transition::ToListEntries => todo!(),
-			Transition::ToChangeAuthentication => todo!(),
+			Transition::ToChangeAuthentication => self.transition_to(Box::new(SetAuthenticationStateItem::new())),
 			Transition::ToGetAccount => todo!(),
 			Transition::ToMainMenu => self.transition_to(Box::new(MainMenuStateItem::new())),
 			Transition::ToExit => self.active = false,

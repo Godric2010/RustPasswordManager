@@ -50,7 +50,7 @@ impl StateItem for AuthenticationStateItem {
 				let enter_prompt = "Please enter master password!";
 				let pos_x = (context.get_width() - enter_prompt.len() as u16) / 2;
 				context.print_at_position(pos_x, vert_center, enter_prompt);
-				context.print_at_position(pos_x, vert_center + 1, " ");
+				context.print_at_position(pos_x, vert_center + 1, "");
 			}
 			LockState::Invalid => {
 				let enter_prompt = "Invalid password!";
