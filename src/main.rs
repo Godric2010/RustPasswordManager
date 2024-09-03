@@ -12,6 +12,8 @@ mod add_entry_state_item;
 mod terminal_context;
 mod set_authentication_state_item;
 mod input_handler;
+mod file_accesssor;
+mod encryption_controller;
 
 fn main(){
 

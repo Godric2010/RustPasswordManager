@@ -1,4 +1,6 @@
 use crossterm::event::KeyCode;
+use crate::encryption_controller::PasswordEncryption;
+use crate::file_accesssor::read_password_from_disk;
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
@@ -11,23 +13,26 @@ enum LockState {
 
 pub struct AuthenticationStateItem {
 	next_state: Option<Transition>,
-	master_password: String,
+	master_password: PasswordEncryption,
 	lock_state: LockState,
 	input_buffer: String,
 }
 
 impl AuthenticationStateItem {
 	pub fn new() -> Self {
+		let pwd_string = read_password_from_disk();
+		let master_password = PasswordEncryption::create_from_string(pwd_string.unwrap()).unwrap();
+
 		AuthenticationStateItem {
 			next_state: None,
-			master_password: "Test".to_string(),
+			master_password,
 			lock_state: LockState::Locked,
 			input_buffer: String::new(),
 		}
 	}
 
 	fn test_password(&mut self) {
-		if self.input_buffer.trim() == self.master_password {
+		if self.master_password.verify_string(self.input_buffer.trim()) {
 			self.lock_state = LockState::Unlocked;
 		} else {
 			self.lock_state = LockState::Invalid;
@@ -81,6 +86,7 @@ impl StateItem for AuthenticationStateItem {
 			}
 			LockState::Invalid => {
 				if key_code == KeyCode::Enter {
+					self.input_buffer.clear();
 					self.lock_state = LockState::Locked;
 				}
 			}

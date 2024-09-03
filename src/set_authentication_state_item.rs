@@ -1,4 +1,6 @@
 use crossterm::event::KeyCode;
+use crate::encryption_controller::PasswordEncryption;
+use crate::file_accesssor::{create_directory_and_files, does_directory_and_files_exist, write_password_to_disk};
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
@@ -8,8 +10,8 @@ use crate::transition::Transition::{ToExit};
 
 pub struct SetAuthenticationStateItem {
 	next_state: Option<Transition>,
-	master_password: String,
-	master_password_confirmation: String,
+	input_buffer: String,
+	password_encryption: Option<PasswordEncryption>,
 	internal_state: SetAuthState,
 }
 
@@ -24,24 +26,29 @@ impl SetAuthenticationStateItem {
 	pub fn new() -> Self {
 		Self {
 			next_state: None,
-			master_password: String::new(),
-			master_password_confirmation: String::new(),
+			input_buffer: String::new(),
+			password_encryption: None,
 			internal_state: SetAuthState::EnterPassword,
 		}
 	}
 
-	fn compare_inputs(&self) -> bool {
-		if self.master_password == self.master_password_confirmation {
-			return true;
+	fn store_pwd(&mut self) {
+		let pwd_string = match &self.password_encryption {
+			Some(pwd) => pwd.create_string(),
+			None => panic!("At this point a password should be set!")
+		};
+
+		if does_directory_and_files_exist() {
+			write_password_to_disk(pwd_string);
+		} else {
+			create_directory_and_files(vec![], pwd_string);
 		}
-		false
 	}
 }
 
 
 impl StateItem for SetAuthenticationStateItem {
-	fn setup(&mut self) {
-	}
+	fn setup(&mut self) {}
 
 	fn display(&self, context: &mut TerminalContext) {
 		let center_y = context.get_height() / 2;
@@ -68,28 +75,32 @@ impl StateItem for SetAuthenticationStateItem {
 	fn register_input(&mut self, key_code: KeyCode) {
 		match self.internal_state {
 			SetAuthState::EnterPassword => {
-				if get_text_input(key_code, &mut self.master_password) {
+				if get_text_input(key_code, &mut self.input_buffer) {
+					self.password_encryption = Some(PasswordEncryption::generate_new(&self.input_buffer));
+					self.input_buffer.clear();
 					self.internal_state = SetAuthState::ConfirmPassword;
 				}
 			}
 			SetAuthState::ConfirmPassword => {
-				if get_text_input(key_code, &mut self.master_password_confirmation) {
-					if self.compare_inputs() {
-						self.internal_state = SetAuthState::Success;
-					} else {
-						self.internal_state = SetAuthState::Failure;
+				if get_text_input(key_code, &mut self.input_buffer) {
+					if let Some(pwd) = &self.password_encryption {
+						if pwd.verify_string(&self.input_buffer) {
+							self.internal_state = SetAuthState::Success;
+							return;
+						}
 					}
+					self.internal_state = SetAuthState::Failure;
 				}
 			}
 			SetAuthState::Success => {
-				if get_enter_press(key_code){
+				if get_enter_press(key_code) {
+					self.store_pwd();
 					self.next_state = Some(ToExit);
 				}
 			}
 			SetAuthState::Failure => {
-				if get_enter_press(key_code){
-					self.master_password.clear();
-					self.master_password_confirmation.clear();
+				if get_enter_press(key_code) {
+					self.input_buffer.clear();
 					self.internal_state = SetAuthState::EnterPassword;
 				}
 			}
