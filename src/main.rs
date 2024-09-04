@@ -1,6 +1,7 @@
 use crate::terminal_context::TerminalContext;
 use crossterm::terminal::size;
-use crossterm::{Command, ExecutableCommand};
+use crossterm::Command;
+use crossterm::ExecutableCommand;
 
 mod state_item;
 mod startup_state_item;
@@ -14,6 +15,7 @@ mod set_authentication_state_item;
 mod input_handler;
 mod file_accesssor;
 mod encryption_controller;
+mod database_context;
 
 fn main(){
 
