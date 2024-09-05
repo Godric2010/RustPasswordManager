@@ -2,7 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use crossterm::style::Print;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use crossterm::{cursor, event, execute, terminal::{self, ClearType}, ExecutableCommand};
-use std::io::{stdout, Stdout, Write};
+use std::io::{stdout, Stdout};
 
 pub struct TerminalContext {
 	stdout: Stdout,

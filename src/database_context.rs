@@ -1,10 +1,10 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use rusqlite::types::Value;
 use rusqlite::{params, Connection, Result};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub struct Account {
 	pub id: i32,
 	pub account_name: String,
-	pub username: String,
 	pub password: String,
 	pub email: Option<String>,
 	pub created_at: SystemTime,
@@ -12,12 +12,12 @@ pub struct Account {
 }
 
 pub struct DatabaseContext {
-	conn: Connection,
+	pub(crate) conn: Connection,
 }
 
 impl DatabaseContext {
-	pub fn new(database_path: &str) -> Result<Self> {
-		let conn = Connection::open(database_path)?;
+	pub fn new() -> Result<Self> {
+		let conn = Connection::open_in_memory()?;
 
 		conn.execute(
 			"CREATE TABLE IF NOT EXISTS accounts (\
@@ -33,14 +33,79 @@ impl DatabaseContext {
 		Ok(DatabaseContext { conn })
 	}
 
-	pub fn add_account(&self, account_name: &str, username: &str, password: &str, email: Option<&str>) -> Result<()> {
+	pub fn restore_db(plain_data: Vec<u8>) -> Result<Self> {
+		let conn = Connection::open_in_memory()?;
+		let sql_dump = String::from_utf8(plain_data).expect("Failed to parse db dump");
+		match conn.execute_batch(&sql_dump) {
+			Ok(()) => Ok(DatabaseContext { conn }),
+			Err(e) => panic!("Failed to restore db: {}, dump => \n{}", e.to_string(), sql_dump)
+		}
+	}
+
+	pub fn dump_db(&self) -> Result<String> {
+		let mut dump = String::new();
+		let mut stmt = self.conn.prepare("SELECT sql FROM sqlite_master WHERE type='table';")?;
+		let mut rows = stmt.query([])?;
+
+		while let Some(row) = rows.next()? {
+			let sql: String = row.get(0)?;
+
+			if sql.contains("sqlite_sequence") {
+				continue;
+			}
+
+			dump.push_str(&sql);
+			dump.push(';');
+		}
+
+		let mut table_stmt = self.conn.prepare("SELECT name FROM sqlite_master WHERE type='table';")?;
+		let mut table_rows = table_stmt.query([])?;
+
+		while let Some(row) = table_rows.next()? {
+			let table_name: String = row.get(0)?;
+
+			if table_name == "sqlite_sequence" {
+				continue;
+			}
+
+			let mut data_stmt = self.conn.prepare(&format!("SELECT * FROM {}", table_name))?;
+			let mut data_rows = data_stmt.query([])?;
+
+			while let Some(data_row) = data_rows.next()? {
+				let column_count = 6;
+				let mut values = Vec::new();
+
+				for i in 0..column_count {
+					let value: Value = data_row.get(i)?;
+					values.push(match value {
+						Value::Null => "NULL".to_string(),
+						Value::Integer(val) => val.to_string(),
+						Value::Real(val) => val.to_string(),
+						Value::Text(val) => format!("'{}'", val.replace("'", "''")),
+						Value::Blob(_) => {
+							"X''".to_string()
+						}
+					});
+				}
+				let insert_statement = format!("INSERT INTO {} VALUES ({});", table_name, values.join(", "));
+				dump.push_str(&insert_statement);
+			}
+		}
+
+		Ok(dump)
+	}
+
+
+	pub fn add_account(&self, account_name: &str, password: &str, email: Option<&str>) -> Result<()> {
 		let current_time = system_time_to_timestamp(SystemTime::now());
-		self.conn.execute(
-			"INSERT INTO accounts (account_name, username, password, email, created_at, updated_at)\
-			VALUES (?1, ?2, ?3, ?4, ?5, ?6",
-			params![account_name, username, password, email, current_time, current_time],
-		)?;
-		Ok(())
+		match self.conn.execute(
+			"INSERT INTO accounts (account_name, password, email, created_at, updated_at)\
+			VALUES (?1, ?2, ?3, ?4, ?5)",
+			params![account_name, password, email, current_time, current_time],
+		) {
+			Ok(_) => Ok(()),
+			Err(e) => panic!("SQL Query error: {}", e.to_string())
+		}
 	}
 
 	pub fn remove_account(&self, id: i32) -> Result<()> {
@@ -50,18 +115,17 @@ impl DatabaseContext {
 
 	pub fn search_accounts_by_name(&self, name_part: &str) -> Result<Vec<Account>> {
 		let mut stmt = self.conn.prepare(
-			"SELECT id, account_name, username, password, email, created_at, updated_at FROM accounts WHERE account_name LIKE ?1",
+			"SELECT id, account_name, password, email, created_at, updated_at FROM accounts WHERE account_name LIKE ?1",
 		)?;
 
 		let account_iter = stmt.query_map(params![format!("%{}%",name_part)], |row| {
 			Ok(Account {
 				id: row.get(0)?,
 				account_name: row.get(1)?,
-				username: row.get(2)?,
-				password: row.get(3)?,
-				email: row.get(4)?,
-				created_at: timestamp_to_system_time(row.get(5)?),
-				updated_at: timestamp_to_system_time(row.get(6)?),
+				password: row.get(2)?,
+				email: row.get(3)?,
+				created_at: timestamp_to_system_time(row.get(4)?),
+				updated_at: timestamp_to_system_time(row.get(5)?),
 			})
 		})?;
 
@@ -74,18 +138,17 @@ impl DatabaseContext {
 
 	pub fn list_all_accounts(&self) -> Result<Vec<Account>> {
 		let mut stmt = self.conn.prepare(
-			"SELECT id, account_name, username, password, email, created_at, updated_at FROM accounts ",
+			"SELECT id, account_name, password, email, created_at, updated_at FROM accounts ",
 		)?;
 
 		let account_iter = stmt.query_map([], |row| {
 			Ok(Account {
 				id: row.get(0)?,
 				account_name: row.get(1)?,
-				username: row.get(2)?,
-				password: row.get(3)?,
-				email: row.get(4)?,
-				created_at: timestamp_to_system_time(row.get(5)?),
-				updated_at: timestamp_to_system_time(row.get(6)?),
+				password: row.get(2)?,
+				email: row.get(3)?,
+				created_at: timestamp_to_system_time(row.get(4)?),
+				updated_at: timestamp_to_system_time(row.get(5)?),
 			})
 		})?;
 

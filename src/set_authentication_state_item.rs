@@ -1,5 +1,6 @@
 use crossterm::event::KeyCode;
-use crate::encryption_controller::PasswordEncryption;
+use crate::database_context::DatabaseContext;
+use crate::encryption_controller::{encrypt_database, PasswordEncryption};
 use crate::file_accesssor::{create_directory_and_files, does_directory_and_files_exist, write_password_to_disk};
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
@@ -33,15 +34,17 @@ impl SetAuthenticationStateItem {
 	}
 
 	fn store_pwd(&mut self) {
-		let pwd_string = match &self.password_encryption {
-			Some(pwd) => pwd.create_string(),
+		let encrypted_password = match &self.password_encryption {
+			Some(pwd) => pwd,
 			None => panic!("At this point a password should be set!")
 		};
 
 		if does_directory_and_files_exist() {
-			write_password_to_disk(pwd_string);
+			write_password_to_disk(encrypted_password.create_string());
 		} else {
-			create_directory_and_files(vec![], pwd_string);
+			let empty_db = DatabaseContext::new().unwrap();
+			let encrypted_db = encrypt_database(empty_db, &encrypted_password.get_encrypted_string()).unwrap();
+			create_directory_and_files(encrypted_db, encrypted_password.create_string());
 		}
 	}
 }

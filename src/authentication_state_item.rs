@@ -1,6 +1,6 @@
 use crossterm::event::KeyCode;
-use crate::encryption_controller::PasswordEncryption;
-use crate::file_accesssor::read_password_from_disk;
+use crate::encryption_controller::{load_encrypted_db, PasswordEncryption};
+use crate::file_accesssor::{read_db_from_disk, read_password_from_disk};
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;

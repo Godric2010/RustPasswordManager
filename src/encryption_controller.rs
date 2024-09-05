@@ -1,7 +1,8 @@
-use aes_gcm::aead::Aead;
-use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
+use crate::database_context::DatabaseContext;
+use aes_gcm::aead::{Aead, OsRng};
+use aes_gcm::{AeadCore, Aes256Gcm, Key, KeyInit, Nonce};
 use base64::{engine::general_purpose, Engine as _};
-use rand::random;
+use ring::aead::NONCE_LEN;
 use ring::pbkdf2;
 use ring::rand::SecureRandom;
 use std::num::NonZeroU32;
@@ -23,7 +24,7 @@ impl PasswordEncryption {
 		}
 	}
 
-	pub fn create_from_string(string: String) -> std::io::Result<(Self)> {
+	pub fn create_from_string(string: String) -> std::io::Result<Self> {
 		let mut parts = string.split(':');
 		let salt_encoded = parts.next().ok_or(std::io::Error::new(
 			std::io::ErrorKind::InvalidData,
@@ -48,10 +49,14 @@ impl PasswordEncryption {
 		} else { None };
 
 
-		Ok((Self {
+		Ok(Self {
 			salt: salt.expect("Salt has not the expected length"),
 			encrypted_string: pwd,
-		}))
+		})
+	}
+
+	pub fn get_encrypted_string(&self) -> [u8; 32] {
+		self.encrypted_string
 	}
 
 	pub fn create_string(&self) -> String {
@@ -90,22 +95,31 @@ impl PasswordEncryption {
 		key
 	}
 }
-pub fn encrypt_with_key(key: &PasswordEncryption, data: &[u8]) -> Vec<u8> {
-	let key = key.create_string();
-	let aes_key = Key::<Aes256Gcm>::from_slice(key.as_bytes());
+
+pub fn load_encrypted_db(encrypted_db: Vec<u8>, encryption_key: &[u8]) -> std::io::Result<DatabaseContext> {
+	let (nonce, ciphertext) = encrypted_db.split_at(NONCE_LEN);
+
+	let aes_key = Key::<Aes256Gcm>::from_slice(encryption_key);
 	let cipher = Aes256Gcm::new(aes_key);
+	let plaintext_db = cipher.decrypt(Nonce::from_slice(nonce), ciphertext).expect("Decryption of db failed");
 
-	let nonce = random::<[u8; 12]>();
-	let ciphertext = cipher.encrypt(Nonce::from_slice(&nonce), data).expect("encryption failure");
-
-	[nonce.to_vec(), ciphertext].concat()
+	let context = DatabaseContext::restore_db(plaintext_db).expect("Restoring db failed!");
+	Ok(context)
 }
 
-pub fn decrypt_with_key(key: &PasswordEncryption, ciphertext: &[u8]) -> Vec<u8> {
-	let key = key.create_string();
-	let aes_key = Key::<Aes256Gcm>::from_slice(key.as_bytes());
+pub fn encrypt_database(database_context: DatabaseContext, encryption_key: &[u8]) -> std::io::Result<Vec<u8>> {
+	let aes_key = Key::<Aes256Gcm>::from_slice(encryption_key);
 	let cipher = Aes256Gcm::new(aes_key);
+	let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
 
-	let (nonce, ciphertext) = ciphertext.split_at(12);
-	cipher.decrypt(Nonce::from_slice(nonce), ciphertext).expect("Decryption failed!")
+	let plaintext = match database_context.dump_db() {
+		Ok(plaintext) => plaintext,
+		Err(e) => {
+			println!("{}", e);
+			panic!("Could not dump db to string!");
+		}
+	};
+
+	let ciphertext = cipher.encrypt(&nonce, plaintext.as_ref()).expect("Encryption of db failed");
+	Ok([nonce.to_vec(), ciphertext].concat())
 }
