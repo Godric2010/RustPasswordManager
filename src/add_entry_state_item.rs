@@ -1,7 +1,9 @@
-use crossterm::event::KeyCode;
+use crate::database_context::DatabaseManager;
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
+use crossterm::event::KeyCode;
+use std::sync::{Arc, Mutex};
 
 use crate::input_handler::*;
 
@@ -19,16 +21,28 @@ pub struct AddEntryStateItem {
 	internal_state: AddEntryState,
 	account_name: String,
 	password_buffer: String,
+	db_manager: Arc<Mutex<DatabaseManager>>,
 }
 
 impl AddEntryStateItem {
-	pub fn new() -> Self {
+	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) -> Self {
 		AddEntryStateItem {
 			next_state: None,
 			internal_state: AddEntryState::SetAccount,
 			account_name: String::new(),
 			password_buffer: String::new(),
+			db_manager
 		}
+	}
+	pub fn write_to_database(&self){
+		let mut database_manager = self.db_manager.lock().unwrap();
+		let db_context = match  database_manager.get_database_context(){
+			Some(context) => context,
+			None => return,
+		};
+
+		db_context.add_account(&self.account_name, &self.password_buffer, None).unwrap();
+		database_manager.safe_database();
 	}
 }
 
@@ -97,6 +111,7 @@ impl StateItem for AddEntryStateItem {
 			}
 			AddEntryState::PasswordSet => {
 				if get_enter_press(key_code) {
+					self.write_to_database();
 					self.next_state = Some(Transition::ToMainMenu);
 				}
 			}

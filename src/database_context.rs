@@ -1,6 +1,8 @@
 use rusqlite::types::Value;
 use rusqlite::{params, Connection, Result};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use crate::encryption_controller::{encrypt_database, load_encrypted_db};
+use crate::file_accesssor::{read_db_from_disk, write_db_to_disk};
 
 pub struct Account {
 	pub id: i32,
@@ -10,6 +12,51 @@ pub struct Account {
 	pub created_at: SystemTime,
 	pub updated_at: SystemTime,
 }
+
+pub enum DatabaseState {
+	Locked,
+	Unlocked(DatabaseContext),
+}
+
+pub struct DatabaseManager {
+	state: DatabaseState,
+	passkey: [u8; 32],
+}
+
+impl DatabaseManager {
+	pub fn new() -> Self {
+		DatabaseManager {
+			state: DatabaseState::Locked,
+			passkey: [0; 32],
+		}
+	}
+
+	pub fn unlock(&mut self, passkey: &[u8; 32]) {
+		let encrypted_database = read_db_from_disk().expect("Failed to read db from disk");
+		let db_content = load_encrypted_db(encrypted_database, passkey).expect("Failed to load encrypted db");
+		let context = DatabaseContext::restore_db(db_content).expect("Failed to restore db");
+		self.passkey = passkey.clone();
+		self.state = DatabaseState::Unlocked(context);
+	}
+
+	pub fn safe_database(&self) {
+		let context = match &self.state{
+			DatabaseState::Locked => return,
+			DatabaseState::Unlocked(context) => context,
+		};
+		let encrypted_db = encrypt_database(context, &self.passkey).expect("Failed to encrypt db");
+		write_db_to_disk(encrypted_db);
+
+	}
+
+	pub fn get_database_context(&self) -> Option<&DatabaseContext> {
+		match &self.state {
+			DatabaseState::Locked => None,
+			DatabaseState::Unlocked(context) => Some(context),
+		}
+	}
+}
+
 
 pub struct DatabaseContext {
 	pub(crate) conn: Connection,

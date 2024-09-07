@@ -96,18 +96,17 @@ impl PasswordEncryption {
 	}
 }
 
-pub fn load_encrypted_db(encrypted_db: Vec<u8>, encryption_key: &[u8]) -> std::io::Result<DatabaseContext> {
+pub fn load_encrypted_db(encrypted_db: Vec<u8>, encryption_key: &[u8]) -> std::io::Result<Vec<u8>> {
 	let (nonce, ciphertext) = encrypted_db.split_at(NONCE_LEN);
 
 	let aes_key = Key::<Aes256Gcm>::from_slice(encryption_key);
 	let cipher = Aes256Gcm::new(aes_key);
 	let plaintext_db = cipher.decrypt(Nonce::from_slice(nonce), ciphertext).expect("Decryption of db failed");
 
-	let context = DatabaseContext::restore_db(plaintext_db).expect("Restoring db failed!");
-	Ok(context)
+	Ok(plaintext_db)
 }
 
-pub fn encrypt_database(database_context: DatabaseContext, encryption_key: &[u8]) -> std::io::Result<Vec<u8>> {
+pub fn encrypt_database(database_context: &DatabaseContext, encryption_key: &[u8]) -> std::io::Result<Vec<u8>> {
 	let aes_key = Key::<Aes256Gcm>::from_slice(encryption_key);
 	let cipher = Aes256Gcm::new(aes_key);
 	let nonce = Aes256Gcm::generate_nonce(&mut OsRng);

@@ -43,7 +43,7 @@ impl SetAuthenticationStateItem {
 			write_password_to_disk(encrypted_password.create_string());
 		} else {
 			let empty_db = DatabaseContext::new().unwrap();
-			let encrypted_db = encrypt_database(empty_db, &encrypted_password.get_encrypted_string()).unwrap();
+			let encrypted_db = encrypt_database(&empty_db, &encrypted_password.get_encrypted_string()).unwrap();
 			create_directory_and_files(encrypted_db, encrypted_password.create_string());
 		}
 	}

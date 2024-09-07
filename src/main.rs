@@ -14,6 +14,7 @@ mod input_handler;
 mod file_accesssor;
 mod encryption_controller;
 mod database_context;
+mod list_entries_state;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");

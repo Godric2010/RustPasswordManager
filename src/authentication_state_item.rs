@@ -1,9 +1,11 @@
-use crossterm::event::KeyCode;
-use crate::encryption_controller::{load_encrypted_db, PasswordEncryption};
-use crate::file_accesssor::{read_db_from_disk, read_password_from_disk};
+use crate::database_context::DatabaseManager;
+use crate::encryption_controller::PasswordEncryption;
+use crate::file_accesssor::read_password_from_disk;
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
+use crossterm::event::KeyCode;
+use std::sync::{Arc, Mutex};
 
 enum LockState {
 	Locked,
@@ -16,10 +18,11 @@ pub struct AuthenticationStateItem {
 	master_password: PasswordEncryption,
 	lock_state: LockState,
 	input_buffer: String,
+	db_manager: Arc<Mutex<DatabaseManager>>,
 }
 
 impl AuthenticationStateItem {
-	pub fn new() -> Self {
+	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) -> Self {
 		let pwd_string = read_password_from_disk();
 		let master_password = PasswordEncryption::create_from_string(pwd_string.unwrap()).unwrap();
 
@@ -28,6 +31,7 @@ impl AuthenticationStateItem {
 			master_password,
 			lock_state: LockState::Locked,
 			input_buffer: String::new(),
+			db_manager,
 		}
 	}
 
@@ -41,6 +45,10 @@ impl AuthenticationStateItem {
 
 	fn remove_character(&mut self) {
 		self.input_buffer.pop();
+	}
+
+	fn unlock_database(&self) {
+		self.db_manager.lock().unwrap().unlock(&self.master_password.get_encrypted_string());
 	}
 }
 
@@ -92,6 +100,7 @@ impl StateItem for AuthenticationStateItem {
 			}
 			LockState::Unlocked => {
 				if key_code == KeyCode::Enter {
+					self.unlock_database();
 					self.next_state = Some(Transition::ToMainMenu);
 				}
 			}
