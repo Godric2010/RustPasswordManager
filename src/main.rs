@@ -16,6 +16,7 @@ mod encryption_controller;
 mod database_context;
 mod list_accounts_state;
 mod show_account_state_item;
+mod wipe_database_state_item;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");

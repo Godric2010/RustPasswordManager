@@ -10,6 +10,7 @@ use crate::startup_state_item::StartupStateItem;
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
+use crate::wipe_database_state_item::WipeDatabaseStateItem;
 
 pub struct StateManager {
 	state: Option<Box<dyn StateItem>>,
@@ -62,7 +63,7 @@ impl StateManager {
 			Transition::ToChangeAuthentication => self.transition_to(Box::new(SetAuthenticationStateItem::new())),
 			Transition::ToShowAccount(account) => self.transition_to(Box::new(ShowAccountStateItem::new(Arc::clone(&self.db_manager), account))),
 			Transition::ToMainMenu => self.transition_to(Box::new(MainMenuStateItem::new())),
-			Transition::ToWipeDatabase => todo!(),
+			Transition::ToWipeDatabase => self.transition_to(Box::new(WipeDatabaseStateItem::new())),
 			Transition::ToExit => self.active = false,
 		}
 	}
