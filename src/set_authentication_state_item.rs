@@ -51,7 +51,6 @@ impl SetAuthenticationStateItem {
 
 
 impl StateItem for SetAuthenticationStateItem {
-	fn setup(&mut self) {}
 
 	fn display(&self, context: &mut TerminalContext) {
 		let center_y = context.get_height() / 2;

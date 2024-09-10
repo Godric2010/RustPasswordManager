@@ -4,6 +4,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use crate::encryption_controller::{encrypt_database, load_encrypted_db};
 use crate::file_accesssor::{read_db_from_disk, write_db_to_disk};
 
+#[derive(Clone)]
 pub struct Account {
 	pub id: i32,
 	pub account_name: String,

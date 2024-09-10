@@ -12,19 +12,18 @@ pub struct StartupStateItem {
 
 impl StartupStateItem {
 	pub fn new() -> Self {
+		let next_state;
+		if does_directory_and_files_exist(){
+			next_state = Some(Transition::ToAuthentication);
+		}else {
+			next_state = Some(Transition::ToChangeAuthentication);
+		}
 		StartupStateItem {
-			next_state: None,
+			next_state,
 		}
 	}
 }
 impl StateItem for StartupStateItem {
-	fn setup(&mut self){
-		if does_directory_and_files_exist(){
-			self.next_state = Some(Transition::ToAuthentication);
-		}else {
-			self.next_state = Some(Transition::ToChangeAuthentication);
-		}
-	}
 
 	fn display(&self, context: &mut TerminalContext) {
 		let welcome_msg = "Rusty Password Manager";

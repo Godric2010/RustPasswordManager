@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::input_handler::*;
 
-enum AddEntryState {
+enum AddAccountState {
 	SetAccount,
 	AccountExists,
 	GeneratePasswordRequest,
@@ -18,7 +18,7 @@ enum AddEntryState {
 
 pub struct AddEntryStateItem {
 	next_state: Option<Transition>,
-	internal_state: AddEntryState,
+	internal_state: AddAccountState,
 	account_name: String,
 	password_buffer: String,
 	db_manager: Arc<Mutex<DatabaseManager>>,
@@ -28,14 +28,14 @@ impl AddEntryStateItem {
 	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) -> Self {
 		AddEntryStateItem {
 			next_state: None,
-			internal_state: AddEntryState::SetAccount,
+			internal_state: AddAccountState::SetAccount,
 			account_name: String::new(),
 			password_buffer: String::new(),
 			db_manager
 		}
 	}
 	pub fn write_to_database(&self){
-		let mut database_manager = self.db_manager.lock().unwrap();
+		let database_manager = self.db_manager.lock().unwrap();
 		let db_context = match  database_manager.get_database_context(){
 			Some(context) => context,
 			None => return,
@@ -47,29 +47,28 @@ impl AddEntryStateItem {
 }
 
 impl StateItem for AddEntryStateItem {
-	fn setup(&mut self) {}
 
 	fn display(&self, context: &mut TerminalContext) {
 		context.print_at_position(0, 0, "Account name:");
 		context.print_at_position(0, 1, self.account_name.as_str());
 		match self.internal_state {
-			AddEntryState::SetAccount => {}
-			AddEntryState::AccountExists => {
+			AddAccountState::SetAccount => {}
+			AddAccountState::AccountExists => {
 				context.print_at_position(0, 2, "This account already exists!");
 				context.print_at_position(0, 3, "Press <Enter> to go back to main menu");
 			}
-			AddEntryState::GeneratePasswordRequest => {
+			AddAccountState::GeneratePasswordRequest => {
 				context.print_at_position(0, 2, "Do you want to generate a secure password for this account? [Y]es [N]o")
 			}
-			AddEntryState::EnterPassword => {
+			AddAccountState::EnterPassword => {
 				context.print_at_position(0, 2, "Enter password:");
 				context.print_at_position(0, 3, "");
 			}
-			AddEntryState::PasswordGenerated => {
+			AddAccountState::PasswordGenerated => {
 				context.print_at_position(0, 2, "Secure password has been generated!");
 				context.print_at_position(0, 3, "Press <Enter> to continue");
 			}
-			AddEntryState::PasswordSet => {
+			AddAccountState::PasswordSet => {
 				context.print_at_position(0, 2, "Password set!");
 				context.print_at_position(0, 3, "Press <Enter> to continue");
 			}
@@ -78,38 +77,36 @@ impl StateItem for AddEntryStateItem {
 
 	fn register_input(&mut self, key_code: KeyCode) {
 		match self.internal_state {
-			AddEntryState::SetAccount => {
+			AddAccountState::SetAccount => {
 				if get_text_input(key_code, &mut self.account_name) {
-					self.internal_state = AddEntryState::GeneratePasswordRequest;
+					self.internal_state = AddAccountState::GeneratePasswordRequest;
 				}
 			}
-			AddEntryState::AccountExists => {
+			AddAccountState::AccountExists => {
 				if get_enter_press(key_code) {
 					self.next_state = Some(Transition::ToMainMenu);
 				}
 			}
-			AddEntryState::GeneratePasswordRequest => {
+			AddAccountState::GeneratePasswordRequest => {
 				if let Some(confirm) = evaluate_yes_no_answer(key_code) {
 					if confirm {
-						self.internal_state = AddEntryState::PasswordGenerated;
+						self.internal_state = AddAccountState::PasswordGenerated;
 					} else {
-						self.internal_state = AddEntryState::EnterPassword
+						self.internal_state = AddAccountState::EnterPassword
 					}
 				}
 			}
-			AddEntryState::EnterPassword => {
-				let mut pwd_buff = self.password_buffer.clone();
-				if get_text_input(key_code, &mut pwd_buff) {
-					self.internal_state = AddEntryState::PasswordSet;
-					self.password_buffer = pwd_buff;
+			AddAccountState::EnterPassword => {
+				if get_text_input(key_code, &mut self.password_buffer) {
+					self.internal_state = AddAccountState::PasswordSet;
 				}
 			}
-			AddEntryState::PasswordGenerated => {
+			AddAccountState::PasswordGenerated => {
 				if get_enter_press(key_code) {
 					self.next_state = Some(Transition::ToMainMenu);
 				}
 			}
-			AddEntryState::PasswordSet => {
+			AddAccountState::PasswordSet => {
 				if get_enter_press(key_code) {
 					self.write_to_database();
 					self.next_state = Some(Transition::ToMainMenu);

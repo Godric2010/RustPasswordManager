@@ -1,10 +1,11 @@
 use std::sync::{Arc, Mutex};
-use crate::add_entry_state_item::AddEntryStateItem;
+use crate::add_account_state_item::AddEntryStateItem;
 use crate::authentication_state_item::AuthenticationStateItem;
 use crate::database_context::DatabaseManager;
-use crate::list_entries_state::ListEntriesState;
+use crate::list_accounts_state::ListAccountsState;
 use crate::main_menu_state_item::MainMenuStateItem;
 use crate::set_authentication_state_item::SetAuthenticationStateItem;
+use crate::show_account_state_item::ShowAccountStateItem;
 use crate::startup_state_item::StartupStateItem;
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
@@ -18,27 +19,19 @@ pub struct StateManager {
 
 impl StateManager {
 	pub fn new() -> Self {
-		let mut sm = StateManager {
+		StateManager {
 			state: Some(Box::new(StartupStateItem::new())),
 			db_manager: Arc::new(Mutex::new(DatabaseManager::new())),
 			active: true,
-		};
-		sm.setup_current_state();
-		sm
-	}
-
-	fn setup_current_state(&mut self) {
-		if let Some(state) = &mut self.state {
-			state.setup();
 		}
 	}
+
 
 	fn transition_to(&mut self, next_state: Box<dyn StateItem>) {
 		if let Some(state) = &mut self.state {
 			state.shutdown();
 		}
 		self.state = Some(next_state);
-		self.setup_current_state();
 	}
 
 	pub fn run(&mut self, context: &mut TerminalContext) {
@@ -64,11 +57,12 @@ impl StateManager {
 	fn transition(&mut self, transition: Transition) {
 		match transition {
 			Transition::ToAuthentication => self.transition_to(Box::new(AuthenticationStateItem::new(Arc::clone(&self.db_manager)))),
-			Transition::ToAddEntry => self.transition_to(Box::new(AddEntryStateItem::new(Arc::clone(&self.db_manager)))),
-			Transition::ToListEntries => self.transition_to(Box::new(ListEntriesState::new(Arc::clone(&self.db_manager)))),
+			Transition::ToAddAccount => self.transition_to(Box::new(AddEntryStateItem::new(Arc::clone(&self.db_manager)))),
+			Transition::ToListAccounts => self.transition_to(Box::new(ListAccountsState::new(Arc::clone(&self.db_manager)))),
 			Transition::ToChangeAuthentication => self.transition_to(Box::new(SetAuthenticationStateItem::new())),
-			Transition::ToGetAccount => todo!(),
+			Transition::ToShowAccount(account) => self.transition_to(Box::new(ShowAccountStateItem::new(Arc::clone(&self.db_manager), account))),
 			Transition::ToMainMenu => self.transition_to(Box::new(MainMenuStateItem::new())),
+			Transition::ToWipeDatabase => todo!(),
 			Transition::ToExit => self.active = false,
 		}
 	}

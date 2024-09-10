@@ -53,7 +53,6 @@ impl AuthenticationStateItem {
 }
 
 impl StateItem for AuthenticationStateItem {
-	fn setup(&mut self) {}
 
 	fn display(&self, context: &mut TerminalContext) {
 		let vert_center = context.get_height() / 2;

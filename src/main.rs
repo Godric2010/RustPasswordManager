@@ -7,14 +7,15 @@ mod state_manager;
 mod authentication_state_item;
 mod transition;
 mod main_menu_state_item;
-mod add_entry_state_item;
+mod add_account_state_item;
 mod terminal_context;
 mod set_authentication_state_item;
 mod input_handler;
 mod file_accesssor;
 mod encryption_controller;
 mod database_context;
-mod list_entries_state;
+mod list_accounts_state;
+mod show_account_state_item;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");

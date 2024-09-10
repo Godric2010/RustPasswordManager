@@ -1,10 +1,13 @@
+use crate::database_context::Account;
+
 #[derive(Clone)]
 pub enum Transition{
 	ToAuthentication,
 	ToChangeAuthentication,
 	ToMainMenu,
-	ToAddEntry,
-	ToGetAccount,
-	ToListEntries,
+	ToAddAccount,
+	ToShowAccount(Account),
+	ToListAccounts,
+	ToWipeDatabase,
 	ToExit,
 }

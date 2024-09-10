@@ -14,17 +14,17 @@ impl MainMenuStateItem {
 	pub fn new() -> Self {
 		let menu_items = vec![
 			"[1] Add new account".to_string(),
-			"[2] Get Account".to_string(),
-			"[3] List all accounts".to_string(),
-			"[4] Set new master password".to_string(),
+			"[2] List all accounts".to_string(),
+			"[3] Set new master password".to_string(),
+			"[4] Wipe database".to_string(),
 			"[5] Exit".to_string(),
 		];
 
 		let menu_transitions = vec![
-			Transition::ToAddEntry,
-			Transition::ToGetAccount,
-			Transition::ToListEntries,
+			Transition::ToAddAccount,
+			Transition::ToListAccounts,
 			Transition::ToChangeAuthentication,
+			Transition::ToWipeDatabase,
 			Transition::ToExit
 		];
 
@@ -38,7 +38,6 @@ impl MainMenuStateItem {
 }
 
 impl StateItem for MainMenuStateItem {
-	fn setup(&mut self) {}
 
 	fn display(&self, context: &mut TerminalContext) {
 		let heading = "Main Menu";

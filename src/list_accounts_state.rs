@@ -5,7 +5,7 @@ use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 
-pub struct ListEntriesState {
+pub struct ListAccountsState {
 	entries: Vec<Account>,
 	search_str: String,
 	selected_index: u16,
@@ -13,7 +13,7 @@ pub struct ListEntriesState {
 	database_manager: Arc<Mutex<DatabaseManager>>,
 }
 
-impl ListEntriesState {
+impl ListAccountsState {
 	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) -> Self {
 		let mut s = Self {
 			entries: Vec::new(),
@@ -44,15 +44,14 @@ impl ListEntriesState {
 	}
 }
 
-impl StateItem for ListEntriesState {
-	fn setup(&mut self) {}
+impl StateItem for ListAccountsState {
 
 	fn display(&self, context: &mut TerminalContext) {
 		context.print_at_position(0, 0, "Accounts");
 		context.print_at_position(0, 2, "Search:");
 		context.print_at_position(0, 3, &self.search_str);
 
-		let mut y = 5u16;
+		let y = 5u16;
 		for (index, entry) in self.entries.iter().enumerate() {
 			let idx = index as u16;
 			let y_pos = y + idx;
@@ -70,7 +69,10 @@ impl StateItem for ListEntriesState {
 		match key_code {
 			KeyCode::Char(c) => self.search_str.push(c),
 			KeyCode::Backspace => { self.search_str.pop(); }
-			KeyCode::Enter => self.next_state = Some(Transition::ToMainMenu),
+			KeyCode::Enter =>{
+				let account = self.entries.get(self.selected_index as usize).unwrap();
+				self.next_state = Some(Transition::ToShowAccount(account.clone()))
+			},
 			KeyCode::Down => {
 				if self.selected_index == self.entries.len() as u16 - 1 {
 					self.selected_index = 0;
