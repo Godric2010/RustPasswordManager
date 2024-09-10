@@ -1,6 +1,6 @@
 use crossterm::event::KeyCode;
 use crate::encryption_controller::PasswordEncryption;
-use crate::file_accesssor::read_password_from_disk;
+use crate::file_accesssor::{delete_directory_and_files, read_password_from_disk};
 use crate::input_handler::{evaluate_yes_no_answer, get_text_input};
 use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
@@ -64,6 +64,7 @@ impl StateItem for WipeDatabaseStateItem {
 					let pwd_string = read_password_from_disk();
 					let master_password = PasswordEncryption::create_from_string(pwd_string.unwrap()).unwrap();
 					if master_password.verify_string(self.password_buffer.trim()) {
+						delete_directory_and_files();
 						self.wipe_state = WipeState::WipeSuccess;
 					} else {
 						self.wipe_state = WipeState::WipeFailure;
