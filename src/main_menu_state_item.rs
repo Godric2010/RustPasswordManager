@@ -1,6 +1,6 @@
 use crossterm::event::KeyCode;
 use crate::state_item::StateItem;
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::{StyleAttribute, TerminalContext};
 use crate::transition::Transition;
 
 pub struct MainMenuStateItem {
@@ -38,7 +38,6 @@ impl MainMenuStateItem {
 }
 
 impl StateItem for MainMenuStateItem {
-
 	fn display(&self, context: &mut TerminalContext) {
 		let heading = "Main Menu";
 
@@ -47,12 +46,13 @@ impl StateItem for MainMenuStateItem {
 
 		context.print_at_position(x_menu_pos, y_start_pos, heading);
 		for (index, text) in self.menu_items.iter().enumerate() {
-			let mut content = String::new();
+			let mut content = text.clone();
 			if self.selected_item == index as u8 {
-				content.push_str("* ");
+				context.print_styled_at_position(0, y_start_pos + 2 + index as u16, content.as_str(), StyleAttribute::InverseColor);
 			}
-			content.push_str(text);
-			context.print_at_position(0, y_start_pos + 2 + index as u16, content.as_str());
+			else {
+				context.print_at_position(0, y_start_pos + 2 + index as u16, content.as_str());
+			}
 		}
 	}
 	fn register_input(&mut self, key_code: KeyCode) {

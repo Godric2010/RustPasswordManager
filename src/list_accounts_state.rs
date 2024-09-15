@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use crossterm::event::KeyCode;
 use crate::database_context::{Account, DatabaseManager};
 use crate::state_item::StateItem;
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::{StyleAttribute, TerminalContext};
 use crate::transition::Transition;
 
 pub struct ListAccountsState {
@@ -34,34 +34,36 @@ impl ListAccountsState {
 		};
 		if self.search_str.len() == 0 {
 			self.entries = db_context.list_all_accounts().unwrap();
-		}else {
+		} else {
 			self.entries = db_context.search_accounts_by_name(&self.search_str).unwrap()
 		}
 
-		if self.selected_index > self.entries.len() as u16{
+		if self.selected_index > self.entries.len() as u16 {
 			self.selected_index = 0;
 		}
 	}
 }
 
 impl StateItem for ListAccountsState {
-
 	fn display(&self, context: &mut TerminalContext) {
 		context.print_at_position(0, 0, "Accounts");
-		context.print_at_position(0, 2, "Search:");
+		if (self.search_str.len() > 0) {
+			context.print_styled_at_position(0, 2, "Search:", StyleAttribute::InverseColor);
+		} else {
+			context.print_at_position(0, 2, "Search:");
+		}
 		context.print_at_position(0, 3, &self.search_str);
 
 		let y = 5u16;
 		for (index, entry) in self.entries.iter().enumerate() {
 			let idx = index as u16;
 			let y_pos = y + idx;
-			let mut account_name = String::new();
-			if idx == self.selected_index {
-				account_name.push_str("* ");
+			let mut account_name = entry.account_name.clone();
+			if idx == self.selected_index && self.search_str.len() == 0 {
+				context.print_styled_at_position(0, y_pos, account_name.as_str(), StyleAttribute::InverseColor);
+			} else {
+				context.print_at_position(0, y_pos, account_name.as_str());
 			}
-			account_name.push_str(entry.account_name.as_str());
-
-			context.print_at_position(0, y_pos, account_name.as_str());
 		}
 	}
 
@@ -69,10 +71,10 @@ impl StateItem for ListAccountsState {
 		match key_code {
 			KeyCode::Char(c) => self.search_str.push(c),
 			KeyCode::Backspace => { self.search_str.pop(); }
-			KeyCode::Enter =>{
+			KeyCode::Enter => {
 				let account = self.entries.get(self.selected_index as usize).unwrap();
 				self.next_state = Some(Transition::ToShowAccount(account.clone()))
-			},
+			}
 			KeyCode::Down => {
 				if self.selected_index == self.entries.len() as u16 - 1 {
 					self.selected_index = 0;

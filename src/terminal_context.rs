@@ -1,8 +1,14 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use crossterm::style::Print;
+use crossterm::style::{Print, Stylize};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use crossterm::{cursor, event, execute, terminal::{self, ClearType}, ExecutableCommand};
-use std::io::{stdout, Stdout};
+use crossterm::{cursor, event, execute, queue, terminal::{self, ClearType}, ExecutableCommand, QueueableCommand};
+use std::io::{stdout, Stdout, Write};
+
+pub enum StyleAttribute {
+	Underline,
+	Bold,
+	InverseColor,
+}
 
 pub struct TerminalContext {
 	stdout: Stdout,
@@ -52,6 +58,23 @@ impl TerminalContext {
 
 		self.stdout.execute(cursor::MoveTo(/*self.origin_x +*/ x, /*self.origin_y +*/ y)).expect("Could not move cursor!");
 		self.stdout.execute(Print(content)).expect("Could not print text!");
+	}
+
+	pub fn print_styled_at_position(&mut self, x: u16, y: u16, content: &str, attribute: StyleAttribute) {
+		if x > self.width || y > self.height {
+			panic!("Position exceeds context width or height!");
+		}
+
+		let styled_content = match attribute {
+			StyleAttribute::Underline => Print(content.underlined()),
+			StyleAttribute::Bold => Print(content.bold()),
+			StyleAttribute::InverseColor => Print(content.negative()),
+		};
+
+
+		// queue!(self.stdout, cursor::MoveTo(x, y), style::PrintStyledContent(content.attribute(attribute))).expect("Could not move cursor!");
+		queue!(self.stdout, cursor::MoveTo(x, y), styled_content).expect("Could not move cursor!");
+		self.stdout.flush().expect("Could not flush stdout");
 	}
 
 	pub fn read_input(&mut self) -> Option<KeyCode> {

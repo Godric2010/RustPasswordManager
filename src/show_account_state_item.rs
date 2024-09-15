@@ -1,9 +1,9 @@
-use std::sync::{Arc, Mutex};
-use crossterm::event::KeyCode;
 use crate::database_context::{Account, DatabaseManager};
 use crate::state_item::StateItem;
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::{TerminalContext, StyleAttribute};
 use crate::transition::Transition;
+use crossterm::event::KeyCode;
+use std::sync::{Arc, Mutex};
 
 enum ShowAccountState {
 	ShowAccount,
@@ -24,7 +24,7 @@ pub struct ShowAccountStateItem {
 }
 
 impl ShowAccountStateItem {
-	pub fn new(db_manager: Arc<Mutex<DatabaseManager>> ,account: Account) -> Self {
+	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>, account: Account) -> Self {
 		Self {
 			account,
 			text_buffer: String::new(),
@@ -37,9 +37,8 @@ impl ShowAccountStateItem {
 }
 
 impl StateItem for ShowAccountStateItem {
-
 	fn display(&self, context: &mut TerminalContext) {
-		context.print_at_position(0, 0, "Account");
+		context.print_styled_at_position(0, 0, "Account", StyleAttribute::Underline);
 
 		context.print_at_position(0, 2, "Name:");
 		context.print_at_position(0, 3, &self.account.account_name);
@@ -58,10 +57,10 @@ impl StateItem for ShowAccountStateItem {
 
 	fn register_input(&mut self, key_code: KeyCode) {
 		match key_code {
-			KeyCode::Char('q')=> {
+			KeyCode::Char('q') => {
 				self.next_state = Some(Transition::ToMainMenu);
-			},
-			_=>{},
+			}
+			_ => {}
 		}
 	}
 
