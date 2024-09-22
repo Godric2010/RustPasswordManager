@@ -143,7 +143,7 @@ impl DatabaseContext {
 	}
 
 
-	pub fn add_account(&self, account_name: &str, password: &str, email: Option<&str>) -> Result<()> {
+	pub fn add_account(&self, account_name: &str, password: &str, email: Option<String>) -> Result<()> {
 		let current_time = system_time_to_timestamp(SystemTime::now());
 		match self.conn.execute(
 			"INSERT INTO accounts (account_name, password, email, created_at, updated_at)\
