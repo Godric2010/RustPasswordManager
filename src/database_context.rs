@@ -1,5 +1,5 @@
 use rusqlite::types::Value;
-use rusqlite::{params, Connection, Result};
+use rusqlite::{params, Connection, Result, Row};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use crate::encryption_controller::{encrypt_database, load_encrypted_db};
 use crate::file_accesssor::{read_db_from_disk, write_db_to_disk};
@@ -41,13 +41,12 @@ impl DatabaseManager {
 	}
 
 	pub fn safe_database(&self) {
-		let context = match &self.state{
+		let context = match &self.state {
 			DatabaseState::Locked => return,
 			DatabaseState::Unlocked(context) => context,
 		};
 		let encrypted_db = encrypt_database(context, &self.passkey).expect("Failed to encrypt db");
 		write_db_to_disk(encrypted_db);
-
 	}
 
 	pub fn get_database_context(&self) -> Option<&DatabaseContext> {
@@ -156,6 +155,37 @@ impl DatabaseContext {
 		}
 	}
 
+	pub fn get_account_by_id(&self, id: i32) -> Result<Option<Account>> {
+		let mut stmt = self.conn.prepare(
+			"SELECT id, account_name, password, email, created_at, updated_at FROM accounts WHERE id = ?1",
+		)?;
+
+		let mut account_iter = stmt.query_map(params![id], |row| {
+			self.create_account_from_row(row)
+		})?;
+
+		if let Some(account) = account_iter.next() {
+			return Ok(Some(account?));
+		}
+
+		Ok(None)
+	}
+
+	pub fn update_account(&self, account: &Account) {
+		let current_time = system_time_to_timestamp(SystemTime::now());
+		if self.conn.execute(
+			"UPDATE accounts SET \
+				account_name = ?1,\
+				password = ?2,\
+				email = ?3,\
+				updated_at = ?4\
+				WHERE id = ?5",
+			params![account.account_name, account.password, account.email, current_time, account.id],
+		).is_err() {
+			panic!("Updating account failed!");
+		}
+	}
+
 	pub fn remove_account(&self, id: i32) -> Result<()> {
 		self.conn.execute("DELETE FROM account WHERE id = ?1", params![id])?;
 		Ok(())
@@ -167,14 +197,7 @@ impl DatabaseContext {
 		)?;
 
 		let account_iter = stmt.query_map(params![format!("%{}%",name_part)], |row| {
-			Ok(Account {
-				id: row.get(0)?,
-				account_name: row.get(1)?,
-				password: row.get(2)?,
-				email: row.get(3)?,
-				created_at: timestamp_to_system_time(row.get(4)?),
-				updated_at: timestamp_to_system_time(row.get(5)?),
-			})
+			self.create_account_from_row(row)
 		})?;
 
 		let mut accounts = Vec::new();
@@ -184,20 +207,14 @@ impl DatabaseContext {
 		Ok(accounts)
 	}
 
+
 	pub fn list_all_accounts(&self) -> Result<Vec<Account>> {
 		let mut stmt = self.conn.prepare(
 			"SELECT id, account_name, password, email, created_at, updated_at FROM accounts ",
 		)?;
 
 		let account_iter = stmt.query_map([], |row| {
-			Ok(Account {
-				id: row.get(0)?,
-				account_name: row.get(1)?,
-				password: row.get(2)?,
-				email: row.get(3)?,
-				created_at: timestamp_to_system_time(row.get(4)?),
-				updated_at: timestamp_to_system_time(row.get(5)?),
-			})
+			self.create_account_from_row(row)
 		})?;
 
 		let mut accounts = Vec::new();
@@ -205,6 +222,17 @@ impl DatabaseContext {
 			accounts.push(account?);
 		}
 		Ok(accounts)
+	}
+
+	fn create_account_from_row(&self, row: &Row) -> Result<Account> {
+		Ok(Account {
+			id: row.get(0)?,
+			account_name: row.get(1)?,
+			password: row.get(2)?,
+			email: row.get(3)?,
+			created_at: timestamp_to_system_time(row.get(4)?),
+			updated_at: timestamp_to_system_time(row.get(5)?),
+		})
 	}
 }
 

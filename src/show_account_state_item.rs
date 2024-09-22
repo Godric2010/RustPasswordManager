@@ -97,9 +97,26 @@ impl ShowAccountStateItem {
 
 	fn show_save_changes_input(&mut self, key_code: KeyCode) {
 		if let Some(accept) = evaluate_yes_no_answer(key_code) {
+			let database_manager = self.db_manager.lock().unwrap();
+			let db_context = match  database_manager.get_database_context(){
+				Some(context) => context,
+				None => return,
+			};
 			if accept {
-				self.internal_state = Arc::new(Mutex::new(ShowAccountState::ShowAccount));
-			} else {}
+				db_context.update_account(&self.account);
+				database_manager.safe_database();
+			} else {
+				let account_result = db_context.get_account_by_id(self.account.id);
+				let account_optional = match account_result {
+					Ok(result) => result,
+					Err(e ) => panic!("Fetching account failed! {}", e.to_string()),
+				};
+				let account = match account_optional {
+					Some(account) => account,
+					None => panic!("Account id was unknown!"),
+				};
+				self.account = account;
+			}
 			self.internal_state = Arc::new(Mutex::new(ShowAccountState::ShowAccount));
 		}
 	}
