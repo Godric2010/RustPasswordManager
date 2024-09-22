@@ -6,6 +6,7 @@ use clipboard::{ClipboardContext, ClipboardProvider};
 pub struct ClipboardController {
 	clipboard: Arc<Mutex<ClipboardContext>>,
 	countdown_value: Arc<Mutex<u8>>,
+	countdown_duration: u8,
 }
 
 impl ClipboardController {
@@ -13,6 +14,7 @@ impl ClipboardController {
 		ClipboardController {
 			clipboard: Arc::new(Mutex::new(ClipboardProvider::new().unwrap())),
 			countdown_value: Arc::new(Mutex::new(0)),
+			countdown_duration: 0,
 		}
 	}
 
@@ -23,6 +25,7 @@ impl ClipboardController {
 		self.set_clipboard_context(content);
 
 		*self.countdown_value.lock().unwrap() = time_available;
+		self.countdown_duration = time_available;
 
 		let clipboard_clone = Arc::clone(&self.clipboard);
 		let countdown_clone = Arc::clone(&self.countdown_value);
@@ -48,5 +51,9 @@ impl ClipboardController {
 
 	pub fn get_countdown_value(&self) -> u8{
 		*self.countdown_value.lock().unwrap()
+	}
+
+	pub fn get_countdown_duration(&self) -> u8{
+		self.countdown_duration
 	}
 }
