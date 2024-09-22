@@ -3,6 +3,7 @@ use crossterm::style::{Print, Stylize};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use crossterm::{cursor, event, execute, queue, terminal::{self, ClearType}, ExecutableCommand, QueueableCommand};
 use std::io::{stdout, Stdout, Write};
+use std::time::Duration;
 
 pub enum StyleAttribute {
 	Underline,
@@ -82,22 +83,25 @@ impl TerminalContext {
 			return None;
 		}
 
-		let key_code = match event::read() {
-			Ok(event::Event::Key(KeyEvent { code, modifiers, .. })) => {
-				match code {
-					KeyCode::Char(c) => {
-						if modifiers.contains(KeyModifiers::SHIFT) {
-							Some(KeyCode::Char(c.to_ascii_uppercase()))
-						} else {
-							Some(KeyCode::Char(c.to_ascii_lowercase()))
+		let mut key_code = None;
+		if event::poll(Duration::from_millis(50)).unwrap() {
+			key_code = match event::read() {
+				Ok(event::Event::Key(KeyEvent { code, modifiers, .. })) => {
+					match code {
+						KeyCode::Char(c) => {
+							if modifiers.contains(KeyModifiers::SHIFT) {
+								Some(KeyCode::Char(c.to_ascii_uppercase()))
+							} else {
+								Some(KeyCode::Char(c.to_ascii_lowercase()))
+							}
 						}
+						_ => Some(code)
 					}
-					_ => Some(code)
 				}
-			}
-			Ok(_) => None,
-			Err(_) => None,
-		};
+				Ok(_) => None,
+				Err(_) => None,
+			};
+		}
 
 		let _ = disable_raw_mode();
 		key_code

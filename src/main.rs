@@ -17,11 +17,12 @@ mod database_context;
 mod list_accounts_state;
 mod show_account_state_item;
 mod wipe_database_state_item;
+mod clipboard_controller;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");
 	let width = 100;
-	let height = 10;
+	let height = 20;
 
 	let (size_x, size_y) = size().expect("Could not read terminal size");
 

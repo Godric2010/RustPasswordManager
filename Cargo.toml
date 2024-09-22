@@ -20,3 +20,4 @@ ring = "0.17.8"
 base64 = "0.22.1"
 rusqlite = { version = "0.32.1" , features = ["bundled","backup"]}
 libsqlite3-sys = "0.30.1"
+copypasta = "0.10.1"
