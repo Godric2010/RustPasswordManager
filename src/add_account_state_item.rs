@@ -4,7 +4,9 @@ use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
-
+use rand::distributions::Alphanumeric;
+use rand::Rng;
+use rand::seq::SliceRandom;
 use crate::input_handler::*;
 
 enum AddAccountState {
@@ -31,12 +33,12 @@ impl AddEntryStateItem {
 			internal_state: AddAccountState::SetAccount,
 			account_name: String::new(),
 			password_buffer: String::new(),
-			db_manager
+			db_manager,
 		}
 	}
-	pub fn write_to_database(&self){
+	pub fn write_to_database(&self) {
 		let database_manager = self.db_manager.lock().unwrap();
-		let db_context = match  database_manager.get_database_context(){
+		let db_context = match database_manager.get_database_context() {
 			Some(context) => context,
 			None => return,
 		};
@@ -44,10 +46,28 @@ impl AddEntryStateItem {
 		db_context.add_account(&self.account_name, &self.password_buffer, None).unwrap();
 		database_manager.safe_database();
 	}
+
+	fn generate_password(&mut self) {
+		const SPECIAL_CHARS: &[u8] = b"!@#$%^&*()_+-=[]{}|;:,.<>?";
+		let length = 30;
+		let mut rng = rand::thread_rng();
+
+		let mut password: Vec<char> = (0..length)
+			.map(|_| rng.sample(Alphanumeric)as char)
+			.collect();
+
+		for _ in 0..(length /4){
+			let idx = rng.gen_range(0..length);
+			let special_char = *SPECIAL_CHARS.choose(&mut rng).unwrap() as char;
+			password[idx] = special_char;
+		}
+
+
+		self.password_buffer = password.into_iter().collect();
+	}
 }
 
 impl StateItem for AddEntryStateItem {
-
 	fn display(&self, context: &mut TerminalContext) {
 		context.print_at_position(0, 0, "Account name:");
 		context.print_at_position(0, 1, self.account_name.as_str());
@@ -90,6 +110,7 @@ impl StateItem for AddEntryStateItem {
 			AddAccountState::GeneratePasswordRequest => {
 				if let Some(confirm) = evaluate_yes_no_answer(key_code) {
 					if confirm {
+						self.generate_password();
 						self.internal_state = AddAccountState::PasswordGenerated;
 					} else {
 						self.internal_state = AddAccountState::EnterPassword
@@ -103,6 +124,7 @@ impl StateItem for AddEntryStateItem {
 			}
 			AddAccountState::PasswordGenerated => {
 				if get_enter_press(key_code) {
+					self.write_to_database();
 					self.next_state = Some(Transition::ToMainMenu);
 				}
 			}
