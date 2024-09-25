@@ -103,7 +103,9 @@ impl StateItem for AddEntryStateItem {
 		let edit_row = prompt_row + 1;
 
 		match self.internal_state {
-			AddAccountState::SetAccount => {}
+			AddAccountState::SetAccount => {
+				context.move_cursor_to_position(self.account_name.len() as u16, 1);
+			}
 			AddAccountState::AccountExists => {
 				context.print_at_position(0, prompt_row, "This account already exists!");
 				context.print_at_position(0, edit_row, "Press <Enter> to go back to main menu");
@@ -114,6 +116,7 @@ impl StateItem for AddEntryStateItem {
 			AddAccountState::EnterEmail => {
 				context.print_at_position(0, prompt_row, "Enter email:");
 				context.print_at_position(0, edit_row, self.email_name.as_str());
+				context.move_cursor_to_position(self.email_name.len() as u16, edit_row);
 			}
 			AddAccountState::GeneratePasswordRequest => {
 				context.print_at_position(0, prompt_row, "Do you want to generate a secure password for this account? [Y]es [N]o")
@@ -121,6 +124,7 @@ impl StateItem for AddEntryStateItem {
 			AddAccountState::EnterPassword => {
 				context.print_at_position(0, prompt_row, "Enter password:");
 				context.print_at_position(0, edit_row, "");
+				context.move_cursor_to_position(0, edit_row);
 			}
 			AddAccountState::PasswordGenerated => {
 				context.print_at_position(0, prompt_row, "Secure password has been generated!");

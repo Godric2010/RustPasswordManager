@@ -1,4 +1,3 @@
-use std::sync::{Arc, Mutex};
 use crate::add_account_state_item::AddEntryStateItem;
 use crate::authentication_state_item::AuthenticationStateItem;
 use crate::database_context::DatabaseManager;
@@ -11,6 +10,7 @@ use crate::state_item::StateItem;
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 use crate::wipe_database_state_item::WipeDatabaseStateItem;
+use std::sync::{Arc, Mutex};
 
 pub struct StateManager {
 	state: Option<Box<dyn StateItem>>,

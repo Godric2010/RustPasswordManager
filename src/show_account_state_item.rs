@@ -98,7 +98,7 @@ impl ShowAccountStateItem {
 	fn show_save_changes_input(&mut self, key_code: KeyCode) {
 		if let Some(accept) = evaluate_yes_no_answer(key_code) {
 			let database_manager = self.db_manager.lock().unwrap();
-			let db_context = match  database_manager.get_database_context(){
+			let db_context = match database_manager.get_database_context() {
 				Some(context) => context,
 				None => return,
 			};
@@ -109,7 +109,7 @@ impl ShowAccountStateItem {
 				let account_result = db_context.get_account_by_id(self.account.id);
 				let account_optional = match account_result {
 					Ok(result) => result,
-					Err(e ) => panic!("Fetching account failed! {}", e.to_string()),
+					Err(e) => panic!("Fetching account failed! {}", e.to_string()),
 				};
 				let account = match account_optional {
 					Some(account) => account,
@@ -125,6 +125,7 @@ impl ShowAccountStateItem {
 		self.show_account_name(context, true);
 		self.show_email(context, false);
 		self.show_password(context, false);
+		context.move_cursor_to_position(self.account.account_name.len() as u16, 3);
 	}
 
 	fn show_edit_accoutname_input(&mut self, key_code: KeyCode) {
@@ -137,6 +138,7 @@ impl ShowAccountStateItem {
 		self.show_account_name(context, false);
 		self.show_email(context, false);
 		self.show_password(context, true);
+		context.move_cursor_to_position(0, 9);
 	}
 
 	fn show_edit_password_input(&mut self, key_code: KeyCode)
@@ -150,15 +152,18 @@ impl ShowAccountStateItem {
 		self.show_account_name(context, false);
 		self.show_email(context, true);
 		self.show_password(context, false);
+		if let Some(email) = &self.account.email {
+			context.move_cursor_to_position(email.len() as u16, 6);
+		}
 	}
 
-	fn show_edit_email_input(&mut self, key_code: KeyCode){
+	fn show_edit_email_input(&mut self, key_code: KeyCode) {
 		let mut email = match &self.account.email {
 			Some(email) => email.clone(),
 			None => "".to_string(),
 		};
 
-		self.edit_account_input(key_code, &mut email, ShowAccountState::EditPassword, ShowAccountState::EditAccountName );
+		self.edit_account_input(key_code, &mut email, ShowAccountState::EditPassword, ShowAccountState::EditAccountName);
 		self.account.email = Some(email);
 	}
 

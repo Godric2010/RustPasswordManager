@@ -4,6 +4,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use crossterm::{cursor, event, execute, queue, terminal::{self, ClearType}, ExecutableCommand, QueueableCommand};
 use std::io::{stdout, Stdout, Write};
 use std::time::Duration;
+use crossterm::cursor::SetCursorStyle;
 
 pub enum StyleAttribute {
 	Underline,
@@ -29,6 +30,7 @@ impl TerminalContext {
 			height,
 		};
 		context.clear_screen();
+		execute!(context.stdout, SetCursorStyle::BlinkingUnderScore).unwrap();
 		context
 	}
 
@@ -58,6 +60,7 @@ impl TerminalContext {
 		}
 
 		self.stdout.execute(cursor::MoveTo(/*self.origin_x +*/ x, /*self.origin_y +*/ y)).expect("Could not move cursor!");
+		self.stdout.execute(cursor::Hide).expect("Could not hide cursor");
 		self.stdout.execute(Print(content)).expect("Could not print text!");
 	}
 
@@ -72,10 +75,13 @@ impl TerminalContext {
 			StyleAttribute::InverseColor => Print(content.negative()),
 		};
 
-
-		// queue!(self.stdout, cursor::MoveTo(x, y), style::PrintStyledContent(content.attribute(attribute))).expect("Could not move cursor!");
-		queue!(self.stdout, cursor::MoveTo(x, y), styled_content).expect("Could not move cursor!");
+		queue!(self.stdout, cursor::MoveTo(x, y), cursor::Hide, styled_content).expect("Could not move cursor!");
 		self.stdout.flush().expect("Could not flush stdout");
+	}
+
+	pub fn move_cursor_to_position(&mut self, x: u16, y: u16) {
+		self.stdout.execute(cursor::MoveTo(x, y)).expect("Could not move cursor");
+		self.stdout.execute(cursor::Show).expect("Could not show cursor");
 	}
 
 	pub fn read_input(&mut self) -> Option<KeyCode> {
