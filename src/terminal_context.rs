@@ -4,7 +4,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use crossterm::{cursor, event, execute, queue, terminal::{self, ClearType}, ExecutableCommand, QueueableCommand};
 use std::io::{stdout, Stdout, Write};
 use std::time::Duration;
-use crossterm::cursor::SetCursorStyle;
+use crossterm::cursor::{MoveTo, SetCursorStyle};
 
 pub enum StyleAttribute {
 	Underline,
@@ -43,6 +43,27 @@ impl TerminalContext {
 		let _ = disable_raw_mode();
 	}
 
+	pub fn draw_border(&mut self) {
+		execute!(self.stdout, MoveTo(self.origin_x -1, self.origin_y -1)).unwrap();
+		execute!(self.stdout, Print('┌')).unwrap();
+		for _ in 0..self.width {
+			execute!(self.stdout, Print('─')).unwrap();
+		}
+		execute!(self.stdout, Print('┐')).unwrap();
+
+		execute!(self.stdout, MoveTo(self.origin_x -1, self.origin_y + self.height)).unwrap();
+		execute!(self.stdout, Print('└')).unwrap();
+		for _ in 0..self.width {
+			execute!(self.stdout, Print('─')).unwrap();
+		}
+		execute!(self.stdout, Print('┘')).unwrap();
+
+		for row in 0..self.height {
+			execute!(self.stdout,MoveTo(self.origin_x - 1, self.origin_y + row),Print('│')).unwrap();
+			execute!(self.stdout,MoveTo(self.origin_x + self.width, self.origin_y + row),Print('│')).unwrap();
+		}
+	}
+
 	pub fn get_width(&self) -> u16 {
 		self.width
 	}
@@ -59,7 +80,7 @@ impl TerminalContext {
 			panic!("Position exceeds context width or height!");
 		}
 
-		self.stdout.execute(cursor::MoveTo(/*self.origin_x +*/ x, /*self.origin_y +*/ y)).expect("Could not move cursor!");
+		self.stdout.execute(cursor::MoveTo(self.origin_x + x, self.origin_y + y)).expect("Could not move cursor!");
 		self.stdout.execute(cursor::Hide).expect("Could not hide cursor");
 		self.stdout.execute(Print(content)).expect("Could not print text!");
 	}
@@ -75,12 +96,12 @@ impl TerminalContext {
 			StyleAttribute::InverseColor => Print(content.negative()),
 		};
 
-		queue!(self.stdout, cursor::MoveTo(x, y), cursor::Hide, styled_content).expect("Could not move cursor!");
+		queue!(self.stdout, cursor::MoveTo(self.origin_x + x, self.origin_y + y), cursor::Hide, styled_content).expect("Could not move cursor!");
 		self.stdout.flush().expect("Could not flush stdout");
 	}
 
 	pub fn move_cursor_to_position(&mut self, x: u16, y: u16) {
-		self.stdout.execute(cursor::MoveTo(x, y)).expect("Could not move cursor");
+		self.stdout.execute(cursor::MoveTo(self.origin_x + x, self.origin_y + y)).expect("Could not move cursor");
 		self.stdout.execute(cursor::Show).expect("Could not show cursor");
 	}
 

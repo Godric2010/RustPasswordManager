@@ -43,7 +43,7 @@ impl StateManager {
 
 			if let Some(state) = &mut self.state {
 				context.clear_screen();
-				state.display(context);
+				state.display_content(context);
 				if let Some(transition) = state.next_state() {
 					self.transition(transition);
 					continue;
