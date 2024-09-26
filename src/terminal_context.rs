@@ -64,6 +64,13 @@ impl TerminalContext {
 		}
 	}
 
+	pub fn print_line(&mut self,x: u16, y: u16, width: u16){
+		execute!(self.stdout, MoveTo(self.origin_x + x, self.origin_y + y)).unwrap();
+		for _ in 0..width {
+			execute!(self.stdout, Print('─')).unwrap();
+		}
+	}
+
 	pub fn get_width(&self) -> u16 {
 		self.width
 	}

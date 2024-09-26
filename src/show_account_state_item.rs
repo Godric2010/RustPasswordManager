@@ -14,6 +14,7 @@ enum ShowAccountState {
 	EditAccountName,
 	EditPassword,
 	EditEmail,
+	DeleteAccount,
 	CopyPassword,
 	SaveChanges,
 }
@@ -47,7 +48,7 @@ impl ShowAccountStateItem {
 		self.show_password(context, false);
 
 		let bottom_position = context.get_height() - 1;
-		context.print_at_position(0, bottom_position, "[E]dit  [C]opy password to clipboard  [Q]uit");
+		context.print_at_position(0, bottom_position, "[E]dit [D]elete [C]opy password to clipboard  [Q]uit");
 	}
 
 	fn show_account_input(&mut self, key_code: KeyCode) {
@@ -65,6 +66,9 @@ impl ShowAccountStateItem {
 			}
 			KeyCode::Char('q') => {
 				self.next_state = Some(Transition::ToMainMenu);
+			}
+			KeyCode::Char('d')=> {
+				self.internal_state = Arc::new(Mutex::new(ShowAccountState::DeleteAccount));
 			}
 			_ => {}
 		}
@@ -167,6 +171,32 @@ impl ShowAccountStateItem {
 		self.account.email = Some(email);
 	}
 
+	fn show_delete_account(&self, context: &mut TerminalContext) {
+		self.show_account_name(context, false);
+		self.show_email(context, false);
+		self.show_password(context, false);
+
+		let bottom_position = context.get_height() - 1;
+		context.print_styled_at_position(0, bottom_position, "Do you want to delete this account? [Y]es [N]o", StyleAttribute::InverseColor);
+	}
+
+	fn show_delete_account_input(&mut self, key_code: KeyCode) {
+		if let Some(accept) = evaluate_yes_no_answer(key_code) {
+			let database_manager = self.db_manager.lock().unwrap();
+			let db_context = match database_manager.get_database_context() {
+				Some(context) => context,
+				None => return,
+			};
+			if accept {
+				db_context.remove_account(self.account.id).unwrap();
+				database_manager.safe_database();
+				self.next_state = Some(Transition::ToMainMenu);
+				return;
+			}
+			self.internal_state = Arc::new(Mutex::new(ShowAccountState::ShowAccount));
+		}
+	}
+
 	fn show_account_name(&self, context: &mut TerminalContext, highlighted: bool) {
 		if highlighted {
 			context.print_styled_at_position(0, 2, "Name:", StyleAttribute::Bold);
@@ -218,6 +248,9 @@ impl StateItem for ShowAccountStateItem {
 	fn display(&self, context: &mut TerminalContext) {
 		context.print_styled_at_position(0, 0, "Account", StyleAttribute::Underline);
 
+		let line_pos_y = context.get_height() - 2;
+		context.print_line(0, line_pos_y, context.get_width());
+
 		let internal_state = self.internal_state.lock().unwrap();
 		match &*internal_state {
 			ShowAccountState::ShowAccount => self.show_account(context),
@@ -226,6 +259,7 @@ impl StateItem for ShowAccountStateItem {
 			ShowAccountState::EditEmail => self.show_edit_email(context),
 			ShowAccountState::CopyPassword => self.show_copy_password(context),
 			ShowAccountState::SaveChanges => self.show_save_changes(context),
+			ShowAccountState::DeleteAccount => self.show_delete_account(context),
 		};
 	}
 
@@ -238,7 +272,8 @@ impl StateItem for ShowAccountStateItem {
 			ShowAccountState::EditPassword => self.show_edit_password_input(key_code),
 			ShowAccountState::EditEmail => self.show_edit_email_input(key_code),
 			ShowAccountState::CopyPassword => {}
-			ShowAccountState::SaveChanges => self.show_save_changes_input(key_code)
+			ShowAccountState::SaveChanges => self.show_save_changes_input(key_code),
+			ShowAccountState::DeleteAccount => self.show_delete_account_input(key_code),
 		}
 	}
 

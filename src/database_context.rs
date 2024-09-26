@@ -187,7 +187,7 @@ impl DatabaseContext {
 	}
 
 	pub fn remove_account(&self, id: i32) -> Result<()> {
-		self.conn.execute("DELETE FROM account WHERE id = ?1", params![id])?;
+		self.conn.execute("DELETE FROM accounts WHERE id = ?1", params![id])?;
 		Ok(())
 	}
 
