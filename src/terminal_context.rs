@@ -1,7 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use crossterm::style::{Print, Stylize};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use crossterm::{cursor, event, execute, queue, terminal::{self, ClearType}, ExecutableCommand, QueueableCommand};
+use crossterm::{cursor, event, execute, queue, terminal::{self, ClearType}, ExecutableCommand};
 use std::io::{stdout, Stdout, Write};
 use std::time::Duration;
 use crossterm::cursor::{MoveTo, SetCursorStyle};

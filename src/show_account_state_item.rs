@@ -21,9 +21,7 @@ enum ShowAccountState {
 
 pub struct ShowAccountStateItem {
 	account: Account,
-	text_buffer: String,
 	internal_state: Arc<Mutex<ShowAccountState>>,
-	account_changed: bool,
 	next_state: Option<Transition>,
 	db_manager: Arc<Mutex<DatabaseManager>>,
 	clipboard_controller: ClipboardController,
@@ -33,8 +31,6 @@ impl ShowAccountStateItem {
 	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>, account: Account) -> Self {
 		Self {
 			account,
-			text_buffer: String::new(),
-			account_changed: false,
 			internal_state: Arc::new(Mutex::new(ShowAccountState::ShowAccount)),
 			db_manager,
 			next_state: None,
@@ -67,7 +63,7 @@ impl ShowAccountStateItem {
 			KeyCode::Char('q') => {
 				self.next_state = Some(Transition::ToMainMenu);
 			}
-			KeyCode::Char('d')=> {
+			KeyCode::Char('d') => {
 				self.internal_state = Arc::new(Mutex::new(ShowAccountState::DeleteAccount));
 			}
 			_ => {}
@@ -132,7 +128,7 @@ impl ShowAccountStateItem {
 		context.move_cursor_to_position(self.account.account_name.len() as u16, 3);
 	}
 
-	fn show_edit_accoutname_input(&mut self, key_code: KeyCode) {
+	fn show_edit_accountname_input(&mut self, key_code: KeyCode) {
 		let mut account_name = self.account.account_name.clone();
 		self.edit_account_input(key_code, &mut account_name, ShowAccountState::EditEmail, ShowAccountState::EditPassword);
 		self.account.account_name = account_name;
@@ -268,7 +264,7 @@ impl StateItem for ShowAccountStateItem {
 		let internal_state = state_clone.lock().unwrap();
 		match &*internal_state {
 			ShowAccountState::ShowAccount => self.show_account_input(key_code),
-			ShowAccountState::EditAccountName => self.show_edit_accoutname_input(key_code),
+			ShowAccountState::EditAccountName => self.show_edit_accountname_input(key_code),
 			ShowAccountState::EditPassword => self.show_edit_password_input(key_code),
 			ShowAccountState::EditEmail => self.show_edit_email_input(key_code),
 			ShowAccountState::CopyPassword => {}

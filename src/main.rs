@@ -21,13 +21,11 @@ mod clipboard_controller;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");
-	let mut width = 0;
-	let mut height = 0;
 
 	let (size_x, size_y) = size().expect("Could not read terminal size");
 
-	width = size_x / 3;
-	height = size_y / 2;
+	let width = size_x / 3;
+	let height = size_y / 2;
 
 	let origin_x = (size_x - width) / 2;
 	let origin_y = (size_y - height) / 2;

@@ -46,7 +46,7 @@ impl StateItem for MainMenuStateItem {
 
 		context.print_at_position(x_menu_pos, y_start_pos, heading);
 		for (index, text) in self.menu_items.iter().enumerate() {
-			let mut content = text.clone();
+			let content = text.clone();
 			if self.selected_item == index as u8 {
 				context.print_styled_at_position(0, y_start_pos + 2 + index as u16, content.as_str(), StyleAttribute::InverseColor);
 			}

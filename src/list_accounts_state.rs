@@ -47,7 +47,7 @@ impl ListAccountsState {
 impl StateItem for ListAccountsState {
 	fn display(&self, context: &mut TerminalContext) {
 		context.print_at_position(0, 0, "Accounts");
-		if (self.search_str.len() > 0) {
+		if self.search_str.len() > 0 {
 			context.print_styled_at_position(0, 2, "Search:", StyleAttribute::InverseColor);
 		} else {
 			context.print_at_position(0, 2, "Search:");
@@ -58,7 +58,7 @@ impl StateItem for ListAccountsState {
 		for (index, entry) in self.entries.iter().enumerate() {
 			let idx = index as u16;
 			let y_pos = y + idx;
-			let mut account_name = entry.account_name.clone();
+			let account_name = entry.account_name.clone();
 			if idx == self.selected_index && self.search_str.len() == 0 {
 				context.print_styled_at_position(0, y_pos, account_name.as_str(), StyleAttribute::InverseColor);
 			} else {
