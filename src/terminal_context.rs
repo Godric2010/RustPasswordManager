@@ -87,7 +87,7 @@ impl TerminalContext {
 			panic!("Position exceeds context width or height!");
 		}
 
-		self.stdout.execute(cursor::MoveTo(self.origin_x + x, self.origin_y + y)).expect("Could not move cursor!");
+		self.stdout.execute(MoveTo(self.origin_x + x, self.origin_y + y)).expect("Could not move cursor!");
 		self.stdout.execute(cursor::Hide).expect("Could not hide cursor");
 		self.stdout.execute(Print(content)).expect("Could not print text!");
 	}

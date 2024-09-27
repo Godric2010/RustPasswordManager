@@ -36,20 +36,30 @@ impl StateManager {
 	}
 
 	pub fn run(&mut self, context: &mut TerminalContext) {
-		loop {
-			if !self.active {
-				break;
-			}
+		let mut display_changed = true;
+
+		while self.active {
 
 			if let Some(state) = &mut self.state {
-				context.clear_screen();
-				state.display_content(context);
-				if let Some(transition) = state.next_state() {
+				if let Some(key_code) = context.read_input(){
+					state.register_input(key_code);
+					display_changed = true;
+				}
+
+				if let Some(transition) = state.next_state(){
 					self.transition(transition);
+					display_changed = true;
 					continue;
 				}
-				if let Some(key_code) = context.read_input() {
-					state.register_input(key_code);
+
+				if state.update_display(){
+					display_changed = true;
+				}
+
+				if display_changed {
+					context.clear_screen();
+					state.display_content(context);
+					display_changed = false;
 				}
 			}
 		}

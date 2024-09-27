@@ -55,6 +55,11 @@ impl StateItem for MainMenuStateItem {
 			}
 		}
 	}
+
+	fn update_display(&self) -> bool {
+		false
+	}
+
 	fn register_input(&mut self, key_code: KeyCode) {
 		match key_code {
 			KeyCode::Char(c) => {

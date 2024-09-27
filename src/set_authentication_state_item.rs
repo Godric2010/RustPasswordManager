@@ -74,6 +74,10 @@ impl StateItem for SetAuthenticationStateItem {
 		}
 	}
 
+	fn update_display(&self) -> bool {
+		false
+	}
+
 	fn register_input(&mut self, key_code: KeyCode) {
 		match self.internal_state {
 			SetAuthState::EnterPassword => {

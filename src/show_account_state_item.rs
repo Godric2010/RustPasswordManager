@@ -259,6 +259,14 @@ impl StateItem for ShowAccountStateItem {
 		};
 	}
 
+	fn update_display(&self) -> bool {
+		let internal_state = self.internal_state.lock().unwrap();
+		if &*internal_state == &ShowAccountState::CopyPassword {
+			return true;
+		}
+		false
+	}
+
 	fn register_input(&mut self, key_code: KeyCode) {
 		let state_clone = Arc::clone(&self.internal_state);
 		let internal_state = state_clone.lock().unwrap();

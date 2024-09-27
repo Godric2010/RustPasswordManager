@@ -24,7 +24,7 @@ fn main() {
 
 	let (size_x, size_y) = size().expect("Could not read terminal size");
 
-	let width = size_x / 3;
+	let width = size_x / 2;
 	let height = size_y / 2;
 
 	let origin_x = (size_x - width) / 2;

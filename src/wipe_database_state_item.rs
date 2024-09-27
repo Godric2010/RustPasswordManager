@@ -48,6 +48,10 @@ impl StateItem for WipeDatabaseStateItem {
 		}
 	}
 
+	fn update_display(&self) -> bool {
+		false
+	}
+
 	fn register_input(&mut self, key_code: KeyCode) {
 		match self.wipe_state {
 			WipeState::ConfirmWipe => {

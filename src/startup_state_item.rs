@@ -32,6 +32,10 @@ impl StateItem for StartupStateItem {
 		context.print_at_position(pos_x, pos_y, welcome_msg);
 	}
 
+	fn update_display(&self) -> bool {
+		false
+	}
+
 	fn register_input(&mut self, _: KeyCode) {
 
 	}

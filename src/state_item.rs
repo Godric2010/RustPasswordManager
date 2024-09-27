@@ -5,6 +5,8 @@ use crate::transition::Transition;
 pub trait StateItem{
 	fn display(&self, context: &mut TerminalContext);
 
+	fn update_display(&self) -> bool;
+
 	fn display_content(&self, context: &mut TerminalContext){
 		context.draw_border();
 		self.display(context);

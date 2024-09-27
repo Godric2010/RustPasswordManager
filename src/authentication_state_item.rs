@@ -82,6 +82,10 @@ impl StateItem for AuthenticationStateItem {
 		}
 	}
 
+	fn update_display(&self) -> bool {
+		false
+	}
+
 	fn register_input(&mut self, key_code: KeyCode) {
 		match self.lock_state {
 			LockState::Locked => {
