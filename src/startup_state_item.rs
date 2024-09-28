@@ -7,7 +7,8 @@ use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 
 pub struct StartupStateItem {
-	next_state: Option<Transition>
+	next_state: Option<Transition>,
+	update_display: bool,
 }
 
 impl StartupStateItem {
@@ -20,6 +21,7 @@ impl StartupStateItem {
 		}
 		StartupStateItem {
 			next_state,
+			update_display: true,
 		}
 	}
 }
@@ -33,11 +35,11 @@ impl StateItem for StartupStateItem {
 	}
 
 	fn update_display(&self) -> bool {
-		false
+		self.update_display
 	}
 
 	fn register_input(&mut self, _: KeyCode) {
-
+		self.update_display = false;
 	}
 
 	fn next_state(&self) -> Option<Transition> {

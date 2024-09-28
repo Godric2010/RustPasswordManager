@@ -64,7 +64,7 @@ impl TerminalContext {
 		}
 	}
 
-	pub fn print_line(&mut self,x: u16, y: u16, width: u16){
+	pub fn print_line(&mut self, x: u16, y: u16, width: u16) {
 		execute!(self.stdout, MoveTo(self.origin_x + x, self.origin_y + y)).unwrap();
 		for _ in 0..width {
 			execute!(self.stdout, Print('─')).unwrap();
@@ -103,12 +103,12 @@ impl TerminalContext {
 			StyleAttribute::InverseColor => Print(content.negative()),
 		};
 
-		queue!(self.stdout, cursor::MoveTo(self.origin_x + x, self.origin_y + y), cursor::Hide, styled_content).expect("Could not move cursor!");
+		queue!(self.stdout, MoveTo(self.origin_x + x, self.origin_y + y), cursor::Hide, styled_content).expect("Could not move cursor!");
 		self.stdout.flush().expect("Could not flush stdout");
 	}
 
 	pub fn move_cursor_to_position(&mut self, x: u16, y: u16) {
-		self.stdout.execute(cursor::MoveTo(self.origin_x + x, self.origin_y + y)).expect("Could not move cursor");
+		self.stdout.execute(MoveTo(self.origin_x + x, self.origin_y + y)).expect("Could not move cursor");
 		self.stdout.execute(cursor::Show).expect("Could not show cursor");
 	}
 
@@ -123,13 +123,22 @@ impl TerminalContext {
 				Ok(event::Event::Key(KeyEvent { code, modifiers, .. })) => {
 					match code {
 						KeyCode::Char(c) => {
-							if modifiers.contains(KeyModifiers::SHIFT) {
-								Some(KeyCode::Char(c.to_ascii_uppercase()))
+							let key_code = if modifiers.contains(KeyModifiers::SHIFT) {
+								c.to_ascii_uppercase()
 							} else {
-								Some(KeyCode::Char(c.to_ascii_lowercase()))
-							}
+								c.to_ascii_lowercase()
+							};
+							self.clear_input_buffer();
+							Some(KeyCode::Char(key_code))
 						}
-						_ => Some(code)
+						KeyCode::Enter => {
+							self.clear_input_buffer();
+							Some(KeyCode::Enter)
+						}
+						_ => {
+							self.clear_input_buffer();
+							Some(code)
+						}
 					}
 				}
 				Ok(_) => None,
@@ -139,5 +148,11 @@ impl TerminalContext {
 
 		let _ = disable_raw_mode();
 		key_code
+	}
+
+	fn clear_input_buffer(&mut self) {
+		while event::poll(Duration::from_millis(50)).unwrap() {
+			let _ = event::read();
+		}
 	}
 }

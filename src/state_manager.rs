@@ -44,6 +44,7 @@ impl StateManager {
 				if let Some(key_code) = context.read_input(){
 					state.register_input(key_code);
 					display_changed = true;
+					continue;
 				}
 
 				if let Some(transition) = state.next_state(){
