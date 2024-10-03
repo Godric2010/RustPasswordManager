@@ -71,6 +71,28 @@ impl TerminalContext {
 		}
 	}
 
+	pub fn draw_control_footer(&mut self, content: Vec<String>) {
+		let divider_y = self.height - 2;
+		let content_y = self.height - 1;
+		self.print_line(0, divider_y, self.width - 1);
+
+		let mut content_string = String::new();
+		for idx in 0..content.len() {
+			content_string.insert_str(content_string.len(), content[idx].as_str());
+			if idx < content.len() - 1 {
+				content_string.insert(content_string.len(), '|');
+			}
+		}
+
+		if content_string.len() > (self.width - 1) as usize {
+			content_string = content_string.split_at((self.width - 1) as usize).0.to_string();
+		}
+
+
+		queue!(self.stdout, MoveTo(self.origin_x , self.origin_y + content_y), cursor::Hide, Print(content_string)).expect("Could not move cursor!");
+		self.stdout.flush().unwrap();
+	}
+
 	pub fn get_width(&self) -> u16 {
 		self.width
 	}

@@ -49,11 +49,13 @@ impl StateItem for MainMenuStateItem {
 			let content = text.clone();
 			if self.selected_item == index as u8 {
 				context.print_styled_at_position(0, y_start_pos + 2 + index as u16, content.as_str(), StyleAttribute::InverseColor);
-			}
-			else {
+			} else {
 				context.print_at_position(0, y_start_pos + 2 + index as u16, content.as_str());
 			}
 		}
+
+		let content = vec!["[\u{2193}] to move down ".to_string(), "[\u{2191}] to move up ".to_string(), "[Enter] to select".to_string()];
+		context.draw_control_footer(content);
 	}
 
 	fn update_display(&self) -> bool {

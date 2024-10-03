@@ -4,7 +4,8 @@
 - [x] Fix startup screen
 - [x] Unify experience for add account and edit account
 - [ ] Control line for each state
-  - [ ] Main menu state
+  - [x] Create terminal context function for footer
+  - [x] Main menu state
   - [ ] Enter master password state
   - [ ] Set master password state
   - [ ] Add Account state
