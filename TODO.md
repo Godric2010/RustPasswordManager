@@ -1,7 +1,7 @@
 # TODO
 
 ## Version 1.0
-- [ ] Fix startup screen
+- [x] Fix startup screen
 - [ ] Unify experience for add account and edit account
   - [ ] Edit area for add account
   - [ ] Fix edit line for edit account
