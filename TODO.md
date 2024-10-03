@@ -24,6 +24,10 @@
   - [ ] Scale app window based on available space
   - [ ] Output safe error if window is too small
   - [ ] Store all texts to display in a resource file
+- [ ] Password handling
+  - [ ] Hide passwords correctly
+  - [ ] Handle cursor gracefully
+  - [ ] Add option to show password on editing
 
 ## Version 1.1
 - [ ] Select database storage location
