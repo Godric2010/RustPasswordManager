@@ -9,6 +9,7 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 use crate::input_handler::*;
 
+#[derive(Eq, PartialEq)]
 enum AddAccountState {
 	SetAccount,
 	AccountExists,
@@ -92,9 +93,12 @@ impl AddEntryStateItem {
 
 impl StateItem for AddEntryStateItem {
 	fn display(&self, context: &mut TerminalContext) {
-		context.print_at_position(0, 0, "Account name:");
-		context.print_at_position(0, 1, self.account_name.as_str());
-		if self.email_name.len() > 0 {
+		if self.internal_state != AddAccountState::SetAccount {
+			context.print_at_position(0, 0, "Account name:");
+			context.print_at_position(0, 1, self.account_name.as_str());
+		}
+
+		if self.email_name.len() > 0 && self.internal_state != AddAccountState::EnterEmail {
 			context.print_at_position(0, 3, "Email:");
 			context.print_at_position(0, 4, self.email_name.as_str());
 		}
@@ -104,7 +108,9 @@ impl StateItem for AddEntryStateItem {
 
 		match self.internal_state {
 			AddAccountState::SetAccount => {
-				context.move_cursor_to_position(self.account_name.len() as u16, 1);
+				context.print_at_position(0, prompt_row, "Account name:");
+				context.print_at_position(0, edit_row, self.account_name.as_str());
+				context.move_cursor_to_position(self.account_name.len() as u16, edit_row);
 			}
 			AddAccountState::AccountExists => {
 				context.print_at_position(0, prompt_row, "This account already exists!");
