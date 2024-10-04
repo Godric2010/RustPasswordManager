@@ -54,7 +54,7 @@ impl StateItem for MainMenuStateItem {
 			}
 		}
 
-		let content = vec!["[\u{2193}] to move down ".to_string(), "[\u{2191}] to move up ".to_string(), "[Enter] to select".to_string()];
+		let content = vec!["[\u{25b2}] to move down ".to_string(), "[\u{25BC}] to move up ".to_string(), "[\u{21B5}] to select".to_string()];
 		context.draw_control_footer(content);
 	}
 
