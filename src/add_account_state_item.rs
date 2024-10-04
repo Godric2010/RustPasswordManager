@@ -1,5 +1,5 @@
 use crate::database_context::DatabaseManager;
-use crate::state_item::StateItem;
+use crate::state_item::{wait_for_seconds, StateItem};
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
@@ -22,7 +22,7 @@ enum AddAccountState {
 }
 
 pub struct AddEntryStateItem {
-	next_state: Option<Transition>,
+	switch_state: Arc<Mutex<bool>>,
 	internal_state: AddAccountState,
 	account_name: String,
 	email_name: String,
@@ -33,7 +33,7 @@ pub struct AddEntryStateItem {
 impl AddEntryStateItem {
 	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) -> Self {
 		AddEntryStateItem {
-			next_state: None,
+			switch_state: Arc::new(Mutex::new(false)),
 			internal_state: AddAccountState::SetAccount,
 			account_name: String::new(),
 			email_name: String::new(),
@@ -41,7 +41,32 @@ impl AddEntryStateItem {
 			db_manager,
 		}
 	}
-	pub fn write_to_database(&self) {
+
+	fn show_account_data(&self, show_account: bool, show_email: bool, show_password: bool, context: &mut TerminalContext) {
+		context.print_at_position(0, 0, "Account name:");
+		if show_account {
+			context.print_at_position(0, 1, self.account_name.as_str());
+		}
+		context.print_at_position(0, 3, "Email:");
+		if show_email {
+			context.print_at_position(0, 4, self.email_name.as_str());
+		}
+		context.print_at_position(0, 6, "Password:");
+		if show_password {
+			context.print_at_position(0, 7, "*********************");
+		}
+	}
+
+	fn finalize_account_creation(&mut self) {
+		self.write_to_database();
+		self.switch_to_main_menu_state(2);
+	}
+
+	fn switch_to_main_menu_state(&mut self, duration: u64) {
+		wait_for_seconds(duration, Arc::clone(&self.switch_state))
+	}
+
+	fn write_to_database(&self) {
 		let database_manager = self.db_manager.lock().unwrap();
 		let db_context = match database_manager.get_database_context() {
 			Some(context) => context,
@@ -93,52 +118,40 @@ impl AddEntryStateItem {
 
 impl StateItem for AddEntryStateItem {
 	fn display(&self, context: &mut TerminalContext) {
-		if self.internal_state != AddAccountState::SetAccount {
-			context.print_at_position(0, 0, "Account name:");
-			context.print_at_position(0, 1, self.account_name.as_str());
-		}
-
-		if self.email_name.len() > 0 && self.internal_state != AddAccountState::EnterEmail {
-			context.print_at_position(0, 3, "Email:");
-			context.print_at_position(0, 4, self.email_name.as_str());
-		}
-
-		let prompt_row = context.get_height() - 2;
-		let edit_row = prompt_row + 1;
-
 		match self.internal_state {
 			AddAccountState::SetAccount => {
-				context.print_at_position(0, prompt_row, "Account name:");
-				context.print_at_position(0, edit_row, self.account_name.as_str());
-				context.move_cursor_to_position(self.account_name.len() as u16, edit_row);
+				self.show_account_data(false, false, false, context);
+				context.draw_input_footer("Account name:".to_string(), &self.account_name)
 			}
 			AddAccountState::AccountExists => {
-				context.print_at_position(0, prompt_row, "This account already exists!");
-				context.print_at_position(0, edit_row, "Press <Enter> to go back to main menu");
+				let text = format!("There is already an account called {}", self.account_name);
+				let center_y = context.get_height() / 2;
+				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
+				context.print_at_position(pos_x, center_y, text.as_str());
 			}
 			AddAccountState::AddEmailRequest => {
-				context.print_at_position(0, prompt_row, "Do you want to enter an email for this account? [Yes] [N]o");
+				self.show_account_data(true, false, false, context);
+				context.draw_request_footer("Add email for this account?".to_string(), "[Y]es | [N]o".to_string());
 			}
 			AddAccountState::EnterEmail => {
-				context.print_at_position(0, prompt_row, "Enter email:");
-				context.print_at_position(0, edit_row, self.email_name.as_str());
-				context.move_cursor_to_position(self.email_name.len() as u16, edit_row);
+				self.show_account_data(true, false, false, context);
+				context.draw_input_footer("Enter email:".to_string(), &self.email_name)
 			}
 			AddAccountState::GeneratePasswordRequest => {
-				context.print_at_position(0, prompt_row, "Do you want to generate a secure password for this account? [Y]es [N]o")
+				self.show_account_data(true, true, false, context);
+				context.draw_request_footer("Generate password for account?".to_string(), "[Y]es | [N]o".to_string());
 			}
 			AddAccountState::EnterPassword => {
-				context.print_at_position(0, prompt_row, "Enter password:");
-				context.print_at_position(0, edit_row, "");
-				context.move_cursor_to_position(0, edit_row);
+				self.show_account_data(true, true, false, context);
+				context.draw_input_footer("Enter password:".to_string(), &"".to_string())
 			}
 			AddAccountState::PasswordGenerated => {
-				context.print_at_position(0, prompt_row, "Secure password has been generated!");
-				context.print_at_position(0, edit_row, "Press <Enter> to continue");
+				self.show_account_data(true, true, true, context);
+				context.draw_control_footer(vec!["Secure password has been generated".to_string()]);
 			}
 			AddAccountState::PasswordSet => {
-				context.print_at_position(0, prompt_row, "Password set!");
-				context.print_at_position(0, edit_row, "Press <Enter> to continue");
+				self.show_account_data(true, true, true, context);
+				context.draw_control_footer(vec!["Password set".to_string()]);
 			}
 		}
 	}
@@ -154,16 +167,13 @@ impl StateItem for AddEntryStateItem {
 					if self.check_if_account_already_exists()
 					{
 						self.internal_state = AddAccountState::AccountExists;
+						self.switch_to_main_menu_state(2);
 					} else {
 						self.internal_state = AddAccountState::AddEmailRequest;
 					}
 				}
 			}
-			AddAccountState::AccountExists => {
-				if get_enter_press(key_code) {
-					self.next_state = Some(Transition::ToMainMenu);
-				}
-			}
+			AddAccountState::AccountExists => {}
 			AddAccountState::AddEmailRequest => {
 				if let Some(confirm) = evaluate_yes_no_answer(key_code) {
 					if confirm {
@@ -183,6 +193,7 @@ impl StateItem for AddEntryStateItem {
 					if confirm {
 						self.generate_password();
 						self.internal_state = AddAccountState::PasswordGenerated;
+						self.finalize_account_creation();
 					} else {
 						self.internal_state = AddAccountState::EnterPassword
 					}
@@ -191,24 +202,19 @@ impl StateItem for AddEntryStateItem {
 			AddAccountState::EnterPassword => {
 				if get_text_input(key_code, &mut self.password_buffer) {
 					self.internal_state = AddAccountState::PasswordSet;
+					self.finalize_account_creation();
 				}
 			}
-			AddAccountState::PasswordGenerated => {
-				if get_enter_press(key_code) {
-					self.write_to_database();
-					self.next_state = Some(Transition::ToMainMenu);
-				}
-			}
-			AddAccountState::PasswordSet => {
-				if get_enter_press(key_code) {
-					self.write_to_database();
-					self.next_state = Some(Transition::ToMainMenu);
-				}
-			}
+			AddAccountState::PasswordGenerated => {}
+			AddAccountState::PasswordSet => {}
 		}
 	}
 
 	fn next_state(&self) -> Option<Transition> {
-		self.next_state.clone()
+		if *self.switch_state.lock().unwrap() {
+			Some(Transition::ToMainMenu)
+		} else {
+			None
+		}
 	}
 }

@@ -93,6 +93,29 @@ impl TerminalContext {
 		self.stdout.flush().unwrap();
 	}
 
+	pub fn draw_input_footer(&mut self, heading: String, input_buffer: &String){
+		let divider_y = self.height -3;
+		let heading_y = self.height -2;
+		let input_buffer_y = self.height -1;
+
+		self.print_line(0, divider_y, self.width -1);
+		queue!(self.stdout, MoveTo(self.origin_x, self.origin_y + heading_y), Print(heading)).expect("Could not execute queue!");
+		queue!(self.stdout, MoveTo(self.origin_x, self.origin_y + input_buffer_y), Print(input_buffer)).expect("Could not execute queue!");
+		self.stdout.flush().unwrap();
+		self.move_cursor_to_position(input_buffer.len() as u16, input_buffer_y);
+	}
+
+	pub fn draw_request_footer(&mut self, heading: String, options: String){
+		let divider_y = self.height -3;
+		let heading_y = self.height -2;
+		let options_y = self.height -1;
+
+		self.print_line(0, divider_y, self.width -1);
+		queue!(self.stdout, MoveTo(self.origin_x, self.origin_y + heading_y), Print(heading)).expect("Could not execute queue!");
+		queue!(self.stdout, MoveTo(self.origin_x, self.origin_y + options_y), Print(options)).expect("Could not execute queue!");
+		self.stdout.flush().unwrap();
+	}
+
 	pub fn get_width(&self) -> u16 {
 		self.width
 	}

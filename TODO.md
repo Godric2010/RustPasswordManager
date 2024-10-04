@@ -9,7 +9,7 @@
   - [x] Main menu state
   - [x] Enter master password state
   - [x] Set master password state
-  - [ ] Add Account state
+  - [x] Add Account state
   - [ ] Edit Account state
   - [ ] List Accounts state
   - [ ] Wipe Database
