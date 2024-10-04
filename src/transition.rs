@@ -1,4 +1,4 @@
-use crate::database_context::Account;
+use crate::database_context::{Account};
 
 #[derive(Clone)]
 pub enum Transition{

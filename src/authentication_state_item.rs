@@ -60,14 +60,14 @@ impl StateItem for AuthenticationStateItem {
 				let pos_x = (context.get_width() - enter_prompt.len() as u16) / 2;
 				context.print_at_position(pos_x, vert_center, enter_prompt);
 				context.print_at_position(pos_x, vert_center + 1, "");
-				context.draw_control_footer(vec!["Press [\u{21B5}] to confirm input".to_string()]);
+				context.draw_control_footer(vec!["[\u{21B5}] to confirm input".to_string()]);
 				context.move_cursor_to_position(pos_x, vert_center + 1);
 			}
 			LockState::Invalid => {
 				let enter_prompt = "Invalid password!";
 				let pos_x_enter = (context.get_width() - enter_prompt.len() as u16) / 2;
 				context.print_at_position(pos_x_enter, vert_center, enter_prompt);
-				context.draw_control_footer(vec!["Press [\u{21B5}] to try again".to_string()])
+				context.draw_control_footer(vec!["[\u{21B5}] to try again".to_string()])
 			}
 			LockState::Unlocked => {
 				let enter_prompt = "Password correct!";

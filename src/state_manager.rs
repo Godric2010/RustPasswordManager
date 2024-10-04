@@ -39,21 +39,20 @@ impl StateManager {
 		let mut display_changed = true;
 
 		while self.active {
-
 			if let Some(state) = &mut self.state {
-				if let Some(key_code) = context.read_input(){
+				if let Some(key_code) = context.read_input() {
 					state.register_input(key_code);
 					display_changed = true;
 					continue;
 				}
 
-				if let Some(transition) = state.next_state(){
+				if let Some(transition) = state.next_state() {
 					self.transition(transition);
 					display_changed = true;
 					continue;
 				}
 
-				if state.update_display(){
+				if state.update_display() {
 					display_changed = true;
 				}
 
@@ -71,7 +70,7 @@ impl StateManager {
 			Transition::ToAuthentication => self.transition_to(Box::new(AuthenticationStateItem::new(Arc::clone(&self.db_manager)))),
 			Transition::ToAddAccount => self.transition_to(Box::new(AddEntryStateItem::new(Arc::clone(&self.db_manager)))),
 			Transition::ToListAccounts => self.transition_to(Box::new(ListAccountsState::new(Arc::clone(&self.db_manager)))),
-			Transition::ToChangeAuthentication => self.transition_to(Box::new(SetAuthenticationStateItem::new())),
+			Transition::ToChangeAuthentication => self.transition_to(Box::new(SetAuthenticationStateItem::new(Arc::clone(&self.db_manager)))),
 			Transition::ToShowAccount(account) => self.transition_to(Box::new(ShowAccountStateItem::new(Arc::clone(&self.db_manager), account))),
 			Transition::ToMainMenu => self.transition_to(Box::new(MainMenuStateItem::new())),
 			Transition::ToWipeDatabase => self.transition_to(Box::new(WipeDatabaseStateItem::new())),

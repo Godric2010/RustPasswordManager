@@ -1,5 +1,6 @@
+use std::sync::{Arc, Mutex};
 use crossterm::event::KeyCode;
-use crate::database_context::DatabaseContext;
+use crate::database_context::{DatabaseContext, DatabaseManager};
 use crate::encryption_controller::{encrypt_database, PasswordEncryption};
 use crate::file_accesssor::{create_directory_and_files, does_directory_and_files_exist, write_password_to_disk};
 use crate::state_item::StateItem;
@@ -13,6 +14,7 @@ pub struct SetAuthenticationStateItem {
 	next_state: Option<Transition>,
 	input_buffer: String,
 	password_encryption: Option<PasswordEncryption>,
+	database_manager: Arc<Mutex<DatabaseManager>>,
 	internal_state: SetAuthState,
 }
 
@@ -24,11 +26,12 @@ enum SetAuthState {
 }
 
 impl SetAuthenticationStateItem {
-	pub fn new() -> Self {
-		Self {
+	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) ->Self{
+		Self{
 			next_state: None,
 			input_buffer: String::new(),
 			password_encryption: None,
+			database_manager: db_manager.clone(),
 			internal_state: SetAuthState::EnterPassword,
 		}
 	}
@@ -51,25 +54,30 @@ impl SetAuthenticationStateItem {
 
 
 impl StateItem for SetAuthenticationStateItem {
-
 	fn display(&self, context: &mut TerminalContext) {
+		let pos_x = context.get_width() / 4;
 		let center_y = context.get_height() / 2;
 		match self.internal_state {
 			SetAuthState::EnterPassword => {
-				context.print_at_position(0, center_y, "Set new master password:");
-				context.print_at_position(0, center_y + 1, "");
+				context.print_at_position(pos_x, center_y - 1, "Set new master password:");
+				context.print_at_position(pos_x, center_y, "");
+				context.draw_control_footer(vec!["Press [\u{21B5}] to confirm input".to_string()]);
+				context.move_cursor_to_position(pos_x, center_y);
 			}
 			SetAuthState::ConfirmPassword => {
-				context.print_at_position(0, center_y, "Confirm new master password:");
-				context.print_at_position(0, center_y + 1, "");
+				context.print_at_position(pos_x, center_y - 1, "Confirm new master password:");
+				context.print_at_position(pos_x, center_y, "");
+				context.draw_control_footer(vec!["[\u{21B5}] to confirm input".to_string(), "[ESC] to quit".to_string()]);
+				context.move_cursor_to_position(pos_x, center_y);
 			}
 			SetAuthState::Success => {
-				context.print_at_position(0, center_y, "Master password set.");
-				context.print_at_position(0, center_y + 1, "Press <Enter> to end the program. Start it again to continue.");
+				context.print_at_position(pos_x, center_y, "Master password set!");
+				context.print_at_position(pos_x, center_y + 1, "Restart the program to continue editing.");
+				context.draw_control_footer(vec!["[\u{21B5}] to continue".to_string()]);
 			}
 			SetAuthState::Failure => {
-				context.print_at_position(0, center_y, "Confirmation failed.");
-				context.print_at_position(0, center_y + 1, "Press <Enter> to try again.");
+				context.print_at_position(pos_x, center_y, "Confirmation failed!");
+				context.draw_control_footer(vec!["[\u{21B5}] to continue".to_string()]);
 			}
 		}
 	}

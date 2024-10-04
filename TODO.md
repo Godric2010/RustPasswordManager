@@ -7,7 +7,7 @@
   - [x] Create terminal context function for footer
   - [x] Main menu state
   - [x] Enter master password state
-  - [ ] Set master password state
+  - [x] Set master password state
   - [ ] Add Account state
   - [ ] Edit Account state
   - [ ] List Accounts state
