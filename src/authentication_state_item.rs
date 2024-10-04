@@ -27,6 +27,7 @@ impl AuthenticationStateItem {
 		let pwd_string = read_password_from_disk();
 		let master_password = PasswordEncryption::create_from_string(pwd_string.unwrap()).unwrap();
 
+		db_manager.lock().unwrap().load_database_from_disk();
 		AuthenticationStateItem {
 			next_state_ready: Arc::new(Mutex::new(false)),
 			master_password,

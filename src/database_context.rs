@@ -1,8 +1,8 @@
 use rusqlite::types::Value;
 use rusqlite::{params, Connection, Result, Row};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use crate::encryption_controller::{encrypt_database, load_encrypted_db};
-use crate::file_accesssor::{read_db_from_disk, write_db_to_disk};
+use crate::encryption_controller::{encrypt_database, load_encrypted_db, PasswordEncryption};
+use crate::file_accesssor::{create_directory_and_files, read_db_from_disk, write_db_to_disk};
 
 #[derive(Clone)]
 #[allow(dead_code)]
@@ -16,7 +16,8 @@ pub struct Account {
 }
 
 pub enum DatabaseState {
-	Locked,
+	Empty,
+	Locked(Vec<u8>),
 	Unlocked(DatabaseContext),
 }
 
@@ -28,22 +29,47 @@ pub struct DatabaseManager {
 impl DatabaseManager {
 	pub fn new() -> Self {
 		DatabaseManager {
-			state: DatabaseState::Locked,
+			state: DatabaseState::Empty,
 			passkey: [0; 32],
 		}
 	}
 
+	pub fn create_new_database(&mut self, key: &PasswordEncryption) {
+		let empty_db = DatabaseContext::new().unwrap();
+		let encrypted_db = encrypt_database(&empty_db, &key.get_encrypted_string()).unwrap();
+		create_directory_and_files(encrypted_db, key.create_string());
+		self.passkey = key.get_encrypted_string().clone();
+		self.state = DatabaseState::Unlocked(empty_db);
+	}
+
+	pub fn load_database_from_disk(&mut self) {
+		self.state = DatabaseState::Locked(read_db_from_disk().expect("Failed to read db from disk"))
+	}
+
 	pub fn unlock(&mut self, passkey: &[u8; 32]) {
-		let encrypted_database = read_db_from_disk().expect("Failed to read db from disk");
-		let db_content = load_encrypted_db(encrypted_database, passkey).expect("Failed to load encrypted db");
+		let encrypted_db: Vec<u8> = match &self.state {
+			DatabaseState::Empty => Vec::new(),
+			DatabaseState::Locked(encrypted_db) => encrypted_db.clone(),
+			DatabaseState::Unlocked(_) => Vec::new(),
+		};
+		if encrypted_db.len() == 0 {
+			panic!("No data found to decrypt.")
+		}
+
+		let db_content = load_encrypted_db(encrypted_db, passkey).expect("Failed to load encrypted db");
 		let context = DatabaseContext::restore_db(db_content).expect("Failed to restore db");
 		self.passkey = passkey.clone();
 		self.state = DatabaseState::Unlocked(context);
 	}
 
+	pub fn set_new_passkey(&mut self, key: &PasswordEncryption){
+		self.passkey = key.get_encrypted_string().clone()
+	}
+
 	pub fn safe_database(&self) {
 		let context = match &self.state {
-			DatabaseState::Locked => return,
+			DatabaseState::Empty => return,
+			DatabaseState::Locked(_) => return,
 			DatabaseState::Unlocked(context) => context,
 		};
 		let encrypted_db = encrypt_database(context, &self.passkey).expect("Failed to encrypt db");
@@ -52,7 +78,8 @@ impl DatabaseManager {
 
 	pub fn get_database_context(&self) -> Option<&DatabaseContext> {
 		match &self.state {
-			DatabaseState::Locked => None,
+			DatabaseState::Empty => None,
+			DatabaseState::Locked(_) => None,
 			DatabaseState::Unlocked(context) => Some(context),
 		}
 	}

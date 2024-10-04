@@ -1,17 +1,15 @@
 use std::sync::{Arc, Mutex};
 use crossterm::event::KeyCode;
-use crate::database_context::{DatabaseContext, DatabaseManager};
-use crate::encryption_controller::{encrypt_database, PasswordEncryption};
-use crate::file_accesssor::{create_directory_and_files, does_directory_and_files_exist, write_password_to_disk};
-use crate::state_item::StateItem;
+use crate::database_context::{DatabaseManager};
+use crate::encryption_controller::{PasswordEncryption};
+use crate::file_accesssor::{does_directory_and_files_exist, write_password_to_disk};
+use crate::state_item::{wait_for_seconds, StateItem};
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
-
 use crate::input_handler::*;
-use crate::transition::Transition::{ToExit};
 
 pub struct SetAuthenticationStateItem {
-	next_state: Option<Transition>,
+	next_state: Arc<Mutex<bool>>,
 	input_buffer: String,
 	password_encryption: Option<PasswordEncryption>,
 	database_manager: Arc<Mutex<DatabaseManager>>,
@@ -26,15 +24,30 @@ enum SetAuthState {
 }
 
 impl SetAuthenticationStateItem {
-	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) ->Self{
-		Self{
-			next_state: None,
+	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) -> Self {
+		Self {
+			next_state: Arc::new(Mutex::new(false)),
 			input_buffer: String::new(),
 			password_encryption: None,
 			database_manager: db_manager.clone(),
 			internal_state: SetAuthState::EnterPassword,
 		}
 	}
+
+	fn check_if_new_password_is_valid(&mut self) {
+		if let Some(pwd) = &self.password_encryption {
+			self.internal_state = if pwd.verify_string(&self.input_buffer) {
+				self.store_pwd();
+				SetAuthState::Success
+			} else {
+				SetAuthState::Failure
+			};
+			wait_for_seconds(2, Arc::clone(&self.next_state));
+		} else {
+			panic!("Password encryption should be available at this point.")
+		}
+	}
+
 
 	fn store_pwd(&mut self) {
 		let encrypted_password = match &self.password_encryption {
@@ -44,10 +57,10 @@ impl SetAuthenticationStateItem {
 
 		if does_directory_and_files_exist() {
 			write_password_to_disk(encrypted_password.create_string());
+			self.database_manager.lock().unwrap().set_new_passkey(encrypted_password);
+			self.database_manager.lock().unwrap().safe_database();
 		} else {
-			let empty_db = DatabaseContext::new().unwrap();
-			let encrypted_db = encrypt_database(&empty_db, &encrypted_password.get_encrypted_string()).unwrap();
-			create_directory_and_files(encrypted_db, encrypted_password.create_string());
+			self.database_manager.lock().unwrap().create_new_database(encrypted_password);
 		}
 	}
 }
@@ -71,13 +84,14 @@ impl StateItem for SetAuthenticationStateItem {
 				context.move_cursor_to_position(pos_x, center_y);
 			}
 			SetAuthState::Success => {
-				context.print_at_position(pos_x, center_y, "Master password set!");
-				context.print_at_position(pos_x, center_y + 1, "Restart the program to continue editing.");
-				context.draw_control_footer(vec!["[\u{21B5}] to continue".to_string()]);
+				let text = "Master password set!";
+				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
+				context.print_at_position(pos_x, center_y, text);
 			}
 			SetAuthState::Failure => {
-				context.print_at_position(pos_x, center_y, "Confirmation failed!");
-				context.draw_control_footer(vec!["[\u{21B5}] to continue".to_string()]);
+				let text = "Confirmation failed";
+				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
+				context.print_at_position(pos_x, center_y, text);
 			}
 		}
 	}
@@ -97,31 +111,23 @@ impl StateItem for SetAuthenticationStateItem {
 			}
 			SetAuthState::ConfirmPassword => {
 				if get_text_input(key_code, &mut self.input_buffer) {
-					if let Some(pwd) = &self.password_encryption {
-						if pwd.verify_string(&self.input_buffer) {
-							self.internal_state = SetAuthState::Success;
-							return;
-						}
-					}
-					self.internal_state = SetAuthState::Failure;
+					self.check_if_new_password_is_valid();
 				}
 			}
-			SetAuthState::Success => {
-				if get_enter_press(key_code) {
-					self.store_pwd();
-					self.next_state = Some(ToExit);
-				}
-			}
-			SetAuthState::Failure => {
-				if get_enter_press(key_code) {
-					self.input_buffer.clear();
-					self.internal_state = SetAuthState::EnterPassword;
-				}
-			}
+			SetAuthState::Success => {}
+			SetAuthState::Failure => {}
 		}
 	}
 
 	fn next_state(&self) -> Option<Transition> {
-		self.next_state.clone()
+		if *self.next_state.lock().unwrap() {
+			match self.internal_state {
+				SetAuthState::Success => Some(Transition::ToMainMenu),
+				SetAuthState::Failure => Some(Transition::ToChangeAuthentication),
+				_ => None
+			}
+		} else {
+			None
+		}
 	}
 }

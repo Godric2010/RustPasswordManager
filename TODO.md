@@ -3,7 +3,7 @@
 ## Version 1.0
 - [x] Fix startup screen
 - [x] Unify experience for add account and edit account
-- [ ] Fix bug where changed master password renders program unusable due to missing to update the dbs key alongside
+- [x] Fix bug where changed master password renders program unusable due to missing to update the dbs key alongside
 - [ ] Control line for each state
   - [x] Create terminal context function for footer
   - [x] Main menu state
