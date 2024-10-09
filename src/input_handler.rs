@@ -12,13 +12,6 @@ pub fn get_text_input(key_code: KeyCode, text_buffer: &mut String) -> bool {
 	false
 }
 
-pub fn get_enter_press(key_code: KeyCode) -> bool {
-	if key_code == KeyCode::Enter {
-		return true;
-	};
-	false
-}
-
 pub fn evaluate_yes_no_answer(key_code: KeyCode) -> Option<bool> {
 	match key_code {
 		KeyCode::Char(c) => {

@@ -10,7 +10,7 @@
   - [x] Enter master password state
   - [x] Set master password state
   - [x] Add Account state
-  - [ ] Edit Account state
+  - [x] Edit Account state
   - [ ] List Accounts state
   - [ ] Wipe Database
 - [ ] Add scroll capability to List Accounts state
