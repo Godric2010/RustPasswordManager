@@ -11,7 +11,7 @@
   - [x] Set master password state
   - [x] Add Account state
   - [x] Edit Account state
-  - [ ] List Accounts state
+  - [x] List Accounts state
   - [ ] Wipe Database
 - [ ] Add scroll capability to List Accounts state
 - [ ] Add exit option for each state

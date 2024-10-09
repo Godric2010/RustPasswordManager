@@ -42,17 +42,23 @@ impl ListAccountsState {
 			self.selected_index = 0;
 		}
 	}
-}
 
-impl StateItem for ListAccountsState {
-	fn display(&self, context: &mut TerminalContext) {
-		context.print_at_position(0, 0, "Accounts");
+	fn show_search_area(&self, context: &mut TerminalContext) {
 		if self.search_str.len() > 0 {
 			context.print_styled_at_position(0, 2, "Search:", StyleAttribute::InverseColor);
 		} else {
 			context.print_at_position(0, 2, "Search:");
 		}
+
 		context.print_at_position(0, 3, &self.search_str);
+		context.print_line(0, 4, context.get_width() - 1);
+	}
+}
+
+impl StateItem for ListAccountsState {
+	fn display(&self, context: &mut TerminalContext) {
+		context.print_at_position(0, 0, "Accounts");
+		self.show_search_area(context);
 
 		let y = 5u16;
 		for (index, entry) in self.entries.iter().enumerate() {
@@ -65,6 +71,9 @@ impl StateItem for ListAccountsState {
 				context.print_at_position(0, y_pos, account_name.as_str());
 			}
 		}
+
+		let content = vec!["[\u{25b2}] to move down ".to_string(), "[\u{25BC}] to move up ".to_string(), "[\u{21B5}] to select".to_string()];
+		context.draw_control_footer(content);
 	}
 
 	fn update_display(&self) -> bool {
