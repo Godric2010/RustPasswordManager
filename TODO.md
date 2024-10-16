@@ -13,7 +13,7 @@
   - [x] Edit Account state
   - [x] List Accounts state
   - [x] Wipe Database
-- [ ] Add scroll capability to List Accounts state
+- [x] Add scroll capability to List Accounts state
 - [ ] Add exit option for each state
   - [ ] List Accounts state
   - [ ] Add Account state

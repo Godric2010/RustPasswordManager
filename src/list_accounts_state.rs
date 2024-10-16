@@ -1,18 +1,16 @@
 use std::sync::{Arc, Mutex};
 use crossterm::event::KeyCode;
 use crate::database_context::{Account, DatabaseManager};
+use crate::page_list_view::PageView;
 use crate::state_item::StateItem;
 use crate::terminal_context::{StyleAttribute, TerminalContext};
 use crate::transition::Transition;
 
+
 pub struct ListAccountsState {
 	entries: Vec<Account>,
 	search_str: String,
-	search_str_len: usize,
-	selected_index: u16,
-	selected_page: u16,
-	pages: u16,
-	page_entry_len: u16,
+	page_view: PageView,
 	next_state: Option<Transition>,
 	database_manager: Arc<Mutex<DatabaseManager>>,
 }
@@ -22,11 +20,7 @@ impl ListAccountsState {
 		let mut s = Self {
 			entries: Vec::new(),
 			search_str: String::new(),
-			search_str_len: 0,
-			selected_index: 0,
-			selected_page: 0,
-			pages: 0,
-			page_entry_len: 10,
+			page_view: PageView::new_empty(),
 			next_state: None,
 			database_manager: db_manager.clone(),
 		};
@@ -42,12 +36,6 @@ impl ListAccountsState {
 		};
 
 		let current_search_str_len = self.search_str.len();
-		if current_search_str_len != self.search_str_len {
-			self.search_str_len = current_search_str_len;
-			self.selected_index = 0;
-			self.selected_page = 0;
-		}
-
 
 		if current_search_str_len == 0 {
 			self.entries = db_context.list_all_accounts().unwrap();
@@ -55,19 +43,9 @@ impl ListAccountsState {
 			self.entries = db_context.search_accounts_by_name(&self.search_str).unwrap()
 		}
 
-		if self.selected_index > self.entries.len() as u16 {
-			self.selected_index = 0;
-		}
-
-		self.pages = self.entries.len() as u16 / self.page_entry_len;
-		if self.entries.len() % 10 > 0 {
-			self.pages += 1;
-		}
-
-		if self.selected_page > self.pages {
-			self.selected_page = 0;
-		}
+		self.page_view = PageView::new(&self.entries);
 	}
+
 
 	fn show_search_area(&self, context: &mut TerminalContext) {
 		if self.search_str.len() > 0 {
@@ -82,26 +60,23 @@ impl ListAccountsState {
 
 	fn show_list_of_accounts(&self, context: &mut TerminalContext) {
 		let y_start = 5u16;
-		let x_end = context.get_width() - 1;
+		self.page_view.display_page(context, 0, y_start);
+	}
 
-		let page_text = format!("[{}/{}]", self.selected_page + 1, self.pages);
-		let page_text_x_pos = x_end - page_text.len() as u16;
+	fn select_account(&mut self) {
+		let selected_account_id = self.page_view.get_selected_account_id();
+		let id = match selected_account_id {
+			Some(id) => id,
+			None => return,
+		};
 
-		context.print_at_position(page_text_x_pos, y_start, &page_text);
+		let account = self.entries.iter().find(|account| account.id == id);
+		let selected_account = match account {
+			Some(account) => account,
+			None => return,
+		};
 
-		let start_index = (self.page_entry_len * self.selected_page) as usize;
-		let last_index = usize::min(start_index + self.page_entry_len as usize, self.entries.len());
-		let entries_at_page = &self.entries[start_index..last_index];
-
-		for list_index in 0..entries_at_page.len() as u16 {
-			let account_index = self.selected_page * self.page_entry_len + list_index;
-			let account_name = &self.entries[account_index as usize].account_name;
-			if list_index == self.selected_index && self.search_str.len() == 0 {
-				context.print_styled_at_position(0, y_start + list_index, account_name.as_str(), StyleAttribute::InverseColor);
-			} else {
-				context.print_at_position(0, y_start + list_index, account_name.as_str());
-			}
-		}
+		self.next_state = Some(Transition::ToShowAccount(selected_account.clone()))
 	}
 }
 
@@ -122,39 +97,31 @@ impl StateItem for ListAccountsState {
 
 	fn register_input(&mut self, key_code: KeyCode) {
 		match key_code {
-			KeyCode::Char(c) => self.search_str.push(c),
-			KeyCode::Backspace => { self.search_str.pop(); }
+			KeyCode::Char(c) => {
+				self.search_str.push(c);
+				self.filter_entries();
+			}
+			KeyCode::Backspace => {
+				self.search_str.pop();
+				self.filter_entries();
+			}
 			KeyCode::Enter => {
-				let account = self.entries.get(self.selected_index as usize).unwrap();
-				self.next_state = Some(Transition::ToShowAccount(account.clone()))
+				self.select_account();
 			}
 			KeyCode::Down => {
-				if self.selected_index == self.page_entry_len - 1 {
-					self.selected_index = 0;
-				} else {
-					self.selected_index += 1;
-				}
+				self.page_view.next_account();
 			}
 			KeyCode::Up => {
-				if self.selected_index == 0 {
-					self.selected_index = self.page_entry_len - 1;
-				} else {
-					self.selected_index -= 1;
-				}
+				self.page_view.prev_account();
 			}
 			KeyCode::Left => {
-				if self.selected_page > 0 {
-					self.selected_page -= 1;
-				}
+				self.page_view.prev_page();
 			}
 			KeyCode::Right => {
-				if self.selected_page < self.pages - 1 {
-					self.selected_page += 1;
-				}
+				self.page_view.next_page();
 			}
 			_ => {}
 		}
-		self.filter_entries();
 	}
 
 	fn next_state(&self) -> Option<Transition> {

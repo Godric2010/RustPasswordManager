@@ -18,6 +18,7 @@ mod list_accounts_state;
 mod show_account_state_item;
 mod wipe_database_state_item;
 mod clipboard_controller;
+mod page_list_view;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");
