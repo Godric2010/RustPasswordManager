@@ -19,10 +19,9 @@
   - [x] Add Account state
   - [x] Set Master Password
 - [ ] Window management 
-  - [ ] Define minimum space for app
-  - [ ] Define maximum space for app
-  - [ ] Scale app window based on available space
-  - [ ] Output safe error if window is too small
+  - [x] Define minimum space for app
+  - [x] Scale app window based on available space
+  - [x] Output safe error if window is too small
   - [ ] Store all texts to display in a resource file
 - [ ] Password handling
   - [ ] Hide passwords correctly

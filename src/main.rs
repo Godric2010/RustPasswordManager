@@ -23,15 +23,28 @@ mod page_list_view;
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");
 
-	let (size_x, size_y) = size().expect("Could not read terminal size");
+	let (terminal_width, terminal_height) = size().expect("Could not read terminal size");
+	let min_width: u16 = 60;
+	let min_height: u16 = 20;
+	let aspect_ratio = 3.0 / 1.0;
 
-	let width = size_x / 2;
-	let height = size_y / 2;
+	if terminal_width < min_width || terminal_height < min_height {
+		println!("Please resize the terminal to at least {}x{} for proper display!", min_width, min_height);
+		return;
+	}
 
-	let origin_x = (size_x - width) / 2;
-	let origin_y = (size_y - height) / 2;
+	let mut frame_width = (terminal_width as f32 * 0.75).min(terminal_width as f32) as u16;
+	let mut frame_height = (frame_width as f32 / aspect_ratio).min(terminal_height as f32 - 2.0) as u16;
 
-	let mut context = TerminalContext::new(origin_x, origin_y, width, height);
+	if frame_height > terminal_height {
+		frame_height = (terminal_height as f32 * 0.75).min(terminal_height as f32) as u16;
+		frame_width = (frame_height as f32 * aspect_ratio).min(terminal_width as f32) as u16;
+	}
+
+	let origin_x = (terminal_width - frame_width) / 2;
+	let origin_y = (terminal_height - frame_height) / 2;
+
+	let mut context = TerminalContext::new(origin_x, origin_y, frame_width, frame_height);
 	let mut state_manager = state_manager::StateManager::new();
 	state_manager.run(&mut context);
 
