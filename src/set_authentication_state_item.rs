@@ -21,6 +21,7 @@ enum SetAuthState {
 	ConfirmPassword,
 	Success,
 	Failure,
+	Cancel,
 }
 
 impl SetAuthenticationStateItem {
@@ -93,6 +94,12 @@ impl StateItem for SetAuthenticationStateItem {
 				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
 				context.print_at_position(pos_x, center_y, text);
 			}
+			SetAuthState::Cancel => {
+				let text = "Do you want to cancel setting a new master password?";
+				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
+				context.print_at_position(pos_x, center_y, text);
+				context.draw_request_footer(String::new(), "[Y]es | [N]o".to_string());
+			}
 		}
 	}
 
@@ -108,10 +115,26 @@ impl StateItem for SetAuthenticationStateItem {
 					self.input_buffer.clear();
 					self.internal_state = SetAuthState::ConfirmPassword;
 				}
+				if key_code == KeyCode::Esc {
+					self.internal_state = SetAuthState::Cancel;
+				}
 			}
 			SetAuthState::ConfirmPassword => {
 				if get_text_input(key_code, &mut self.input_buffer) {
 					self.check_if_new_password_is_valid();
+				}
+				if key_code == KeyCode::Esc {
+					self.internal_state = SetAuthState::Cancel;
+				}
+			}
+			SetAuthState::Cancel => {
+				if let Some(confirm) = evaluate_yes_no_answer(key_code) {
+					if confirm {
+						*self.next_state.lock().unwrap() = true;
+					} else {
+						self.input_buffer.clear();
+						self.internal_state = SetAuthState::EnterPassword;
+					}
 				}
 			}
 			SetAuthState::Success => {}
@@ -122,6 +145,7 @@ impl StateItem for SetAuthenticationStateItem {
 	fn next_state(&self) -> Option<Transition> {
 		if *self.next_state.lock().unwrap() {
 			match self.internal_state {
+				SetAuthState::Cancel => Some(Transition::ToMainMenu),
 				SetAuthState::Success => Some(Transition::ToMainMenu),
 				SetAuthState::Failure => Some(Transition::ToChangeAuthentication),
 				_ => None

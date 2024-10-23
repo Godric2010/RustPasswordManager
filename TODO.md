@@ -14,10 +14,10 @@
   - [x] List Accounts state
   - [x] Wipe Database
 - [x] Add scroll capability to List Accounts state
-- [ ] Add exit option for each state
+- [x] Add exit option for each state
   - [x] List Accounts state
   - [x] Add Account state
-  - [ ] Set Master Password
+  - [x] Set Master Password
 - [ ] Window management 
   - [ ] Define minimum space for app
   - [ ] Define maximum space for app
