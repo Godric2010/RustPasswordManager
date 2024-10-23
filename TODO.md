@@ -15,7 +15,7 @@
   - [x] Wipe Database
 - [x] Add scroll capability to List Accounts state
 - [ ] Add exit option for each state
-  - [ ] List Accounts state
+  - [x] List Accounts state
   - [ ] Add Account state
   - [ ] Set Master Password
 - [ ] Window management 
@@ -34,6 +34,16 @@
   - [ ] Allow to select the database location when none is found
   - [ ] Scan all drives attached for a database
   - [ ] List databases if multiple are found
+- [ ] Implement help screen instead of command line 
+  - [ ] Add help screen
+  - [ ] Implement help for each state
+    - [ ] Main Menu
+    - [ ] Enter Master Password
+    - [ ] Set Master Password
+    - [ ] Add Account
+    - [ ] Edit Account
+    - [ ] List Account
+    - [ ] Wipe Database
 - [ ] Error state
   - [ ] Add fallback state to jump into if an error occurs
   - [ ] Remove unwrap and expect statements and redirect them to the fallback state
