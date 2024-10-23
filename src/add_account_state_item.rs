@@ -19,6 +19,7 @@ enum AddAccountState {
 	EnterPassword,
 	PasswordGenerated,
 	PasswordSet,
+	Cancel,
 }
 
 pub struct AddEntryStateItem {
@@ -153,6 +154,11 @@ impl StateItem for AddEntryStateItem {
 				self.show_account_data(true, true, true, context);
 				context.draw_control_footer(vec!["Password set".to_string()]);
 			}
+			AddAccountState::Cancel => {
+				let text = "Do you want to cancel the account creation?";
+				context.print_at_position(context.get_width() / 2 - text.len() as u16 /2, context.get_height() / 2, text);
+				context.draw_request_footer("".to_string(), "[Y]es | [N]o".to_string());
+			}
 		}
 	}
 
@@ -172,6 +178,9 @@ impl StateItem for AddEntryStateItem {
 						self.internal_state = AddAccountState::AddEmailRequest;
 					}
 				}
+				if key_code == KeyCode::Esc {
+					self.internal_state = AddAccountState::Cancel;
+				}
 			}
 			AddAccountState::AccountExists => {}
 			AddAccountState::AddEmailRequest => {
@@ -182,10 +191,16 @@ impl StateItem for AddEntryStateItem {
 						self.internal_state = AddAccountState::GeneratePasswordRequest;
 					}
 				}
+				if key_code == KeyCode::Esc{
+					self.internal_state = AddAccountState::Cancel;
+				}
 			}
 			AddAccountState::EnterEmail => {
 				if get_text_input(key_code, &mut self.email_name) {
 					self.internal_state = AddAccountState::GeneratePasswordRequest;
+				}
+				if key_code == KeyCode::Esc{
+					self.internal_state = AddAccountState::Cancel;
 				}
 			}
 			AddAccountState::GeneratePasswordRequest => {
@@ -198,15 +213,31 @@ impl StateItem for AddEntryStateItem {
 						self.internal_state = AddAccountState::EnterPassword
 					}
 				}
+				if key_code == KeyCode::Esc{
+					self.internal_state = AddAccountState::Cancel;
+				}
 			}
 			AddAccountState::EnterPassword => {
 				if get_text_input(key_code, &mut self.password_buffer) {
 					self.internal_state = AddAccountState::PasswordSet;
 					self.finalize_account_creation();
 				}
+				if key_code == KeyCode::Esc{
+					self.internal_state = AddAccountState::Cancel;
+				}
 			}
 			AddAccountState::PasswordGenerated => {}
 			AddAccountState::PasswordSet => {}
+			AddAccountState::Cancel => {
+				if let Some(confirm)  = evaluate_yes_no_answer(key_code){
+					if confirm {
+						self.switch_to_main_menu_state(0);
+					}
+					else {
+						self.internal_state = AddAccountState::SetAccount;
+					}
+				}
+			}
 		}
 	}
 

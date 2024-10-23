@@ -16,7 +16,7 @@
 - [x] Add scroll capability to List Accounts state
 - [ ] Add exit option for each state
   - [x] List Accounts state
-  - [ ] Add Account state
+  - [x] Add Account state
   - [ ] Set Master Password
 - [ ] Window management 
   - [ ] Define minimum space for app
