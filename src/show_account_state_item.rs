@@ -7,6 +7,7 @@ use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::cmp::PartialEq;
 use std::sync::{Arc, Mutex};
+use crate::texts::get_texts;
 
 #[derive(PartialEq)]
 enum ShowAccountState {
@@ -43,7 +44,7 @@ impl ShowAccountStateItem {
 		self.show_email(context, false);
 		self.show_password(context, false);
 
-		context.draw_control_footer(vec!["[E]dit".to_string(), "[D]elete".to_string(), "[C]opy password to clipboard".to_string(), "[Q]uit".to_string()])
+		context.draw_control_footer(vec![&get_texts().show_account.edit_input, &get_texts().show_account.delete_input, &get_texts().show_account.copy_input, &get_texts().show_account.quit_input])
 	}
 
 	fn show_account_input(&mut self, key_code: KeyCode) {
@@ -76,12 +77,12 @@ impl ShowAccountStateItem {
 
 
 		let time_left = self.clipboard_controller.get_countdown_value();
-		let result_output = if self.clipboard_controller.get_countdown_duration() == time_left {
-			"Copied password to clipboard".to_string()
+		if self.clipboard_controller.get_countdown_duration() == time_left {
+			context.draw_control_footer(vec![&get_texts().show_account.copy_msg])
 		} else {
-			format!("Clearing clipboard in {}s", time_left)
+			let countdown =	format!("{} {}s", &get_texts().show_account.copy_countdown, time_left);
+			context.draw_control_footer(vec![&countdown])
 		};
-		context.draw_control_footer(vec![result_output]);
 	}
 
 	fn show_save_changes(&self, context: &mut TerminalContext) {
@@ -89,7 +90,7 @@ impl ShowAccountStateItem {
 		self.show_email(context, false);
 		self.show_password(context, false);
 
-		context.draw_request_footer("Save changes?".to_string(), "[Y]es | [N]o".to_string());
+		context.draw_request_footer(&get_texts().show_account.save_question);
 	}
 
 	fn show_save_changes_input(&mut self, key_code: KeyCode) {
@@ -123,7 +124,7 @@ impl ShowAccountStateItem {
 		self.show_email(context, false);
 		self.show_password(context, false);
 
-		let content = vec!["[\u{25b2}] to move down ".to_string(), "[\u{25BC}] to move up ".to_string(), "[\u{21B5}] to end edit mode".to_string()];
+		let content = vec![&get_texts().input.down_arrow, &get_texts().input.up_arrow, &get_texts().input.enter];
 		context.draw_control_footer(content);
 		context.move_cursor_to_position(self.account.account_name.len() as u16, 3);
 	}
@@ -139,7 +140,7 @@ impl ShowAccountStateItem {
 		self.show_email(context, false);
 		self.show_password(context, true);
 
-		let content = vec!["[\u{25b2}] to move down ".to_string(), "[\u{25BC}] to move up ".to_string(), "[\u{21B5}] to end edit mode".to_string()];
+		let content = vec![&get_texts().input.down_arrow, &get_texts().input.up_arrow, &get_texts().input.enter];
 		context.draw_control_footer(content);
 		context.move_cursor_to_position(0, 9);
 	}
@@ -156,7 +157,7 @@ impl ShowAccountStateItem {
 		self.show_email(context, true);
 		self.show_password(context, false);
 
-		let content = vec!["[\u{25b2}] to move down ".to_string(), "[\u{25BC}] to move up ".to_string(), "[\u{21B5}] to end edit mode".to_string()];
+		let content = vec![&get_texts().input.down_arrow, &get_texts().input.up_arrow, &get_texts().input.enter];
 		context.draw_control_footer(content);
 		if let Some(email) = &self.account.email {
 			context.move_cursor_to_position(email.len() as u16, 6);
@@ -178,7 +179,7 @@ impl ShowAccountStateItem {
 		self.show_email(context, false);
 		self.show_password(context, false);
 
-		context.draw_request_footer("Do you want to delete this account?".to_string(), "[Y]es  [N]o".to_string());
+		context.draw_request_footer(&get_texts().show_account.delete_question);
 	}
 
 	fn show_delete_account_input(&mut self, key_code: KeyCode) {
@@ -200,10 +201,10 @@ impl ShowAccountStateItem {
 
 	fn show_account_name(&self, context: &mut TerminalContext, highlighted: bool) {
 		if highlighted {
-			context.print_styled_at_position(0, 2, "Name:", StyleAttribute::Bold);
+			context.print_styled_at_position(0, 2, &get_texts().account.account_name, StyleAttribute::Bold);
 			context.print_styled_at_position(0, 3, &self.account.account_name, StyleAttribute::InverseColor);
 		} else {
-			context.print_at_position(0, 2, "Name:");
+			context.print_at_position(0, 2, &get_texts().account.account_name);
 			context.print_at_position(0, 3, &self.account.account_name);
 		}
 	}
@@ -214,20 +215,20 @@ impl ShowAccountStateItem {
 			None => "",
 		};
 		if highlighted {
-			context.print_styled_at_position(0, 5, "Email:", StyleAttribute::Bold);
+			context.print_styled_at_position(0, 5, &get_texts().account.email, StyleAttribute::Bold);
 			context.print_styled_at_position(0, 6, &email, StyleAttribute::InverseColor);
 		} else {
-			context.print_at_position(0, 5, "Email:");
+			context.print_at_position(0, 5, &get_texts().account.email);
 			context.print_at_position(0, 6, &email);
 		}
 	}
 
 	fn show_password(&self, context: &mut TerminalContext, highlighted: bool) {
 		if highlighted {
-			context.print_styled_at_position(0, 8, "Password:", StyleAttribute::Bold);
+			context.print_styled_at_position(0, 8, &get_texts().account.password, StyleAttribute::Bold);
 			context.print_styled_at_position(0, 9, &self.account.password, StyleAttribute::InverseColor);
 		} else {
-			context.print_at_position(0, 8, "Password:");
+			context.print_at_position(0, 8, &get_texts().account.password);
 			context.print_at_position(0, 9, &self.account.password);
 		}
 	}
@@ -247,7 +248,7 @@ impl ShowAccountStateItem {
 
 impl StateItem for ShowAccountStateItem {
 	fn display(&self, context: &mut TerminalContext) {
-		context.print_styled_at_position(0, 0, "Account", StyleAttribute::Underline);
+		context.print_styled_at_position(0, 0, &get_texts().show_account.heading, StyleAttribute::Underline);
 
 		let internal_state = self.internal_state.lock().unwrap();
 		match &*internal_state {

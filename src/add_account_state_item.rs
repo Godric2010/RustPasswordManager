@@ -8,6 +8,7 @@ use rand::distributions::Alphanumeric;
 use rand::Rng;
 use rand::seq::SliceRandom;
 use crate::input_handler::*;
+use crate::texts::get_texts;
 
 #[derive(Eq, PartialEq)]
 enum AddAccountState {
@@ -44,17 +45,18 @@ impl AddEntryStateItem {
 	}
 
 	fn show_account_data(&self, show_account: bool, show_email: bool, show_password: bool, context: &mut TerminalContext) {
-		context.print_at_position(0, 0, "Account name:");
+		context.print_at_position(0, 0, &get_texts().add_account.heading);
+		context.print_at_position(0, 2, &get_texts().account.account_name);
 		if show_account {
-			context.print_at_position(0, 1, self.account_name.as_str());
+			context.print_at_position(0, 3, self.account_name.as_str());
 		}
-		context.print_at_position(0, 3, "Email:");
+		context.print_at_position(0, 5, &get_texts().account.email);
 		if show_email {
-			context.print_at_position(0, 4, self.email_name.as_str());
+			context.print_at_position(0, 6, self.email_name.as_str());
 		}
-		context.print_at_position(0, 6, "Password:");
+		context.print_at_position(0, 8, &get_texts().account.password);
 		if show_password {
-			context.print_at_position(0, 7, "*********************");
+			context.print_at_position(0, 9, "*********************");
 		}
 	}
 
@@ -122,42 +124,42 @@ impl StateItem for AddEntryStateItem {
 		match self.internal_state {
 			AddAccountState::SetAccount => {
 				self.show_account_data(false, false, false, context);
-				context.draw_input_footer("Account name:".to_string(), &self.account_name)
+				context.draw_input_footer(&get_texts().account.account_name, &self.account_name)
 			}
 			AddAccountState::AccountExists => {
-				let text = format!("There is already an account called {}", self.account_name);
+				let text = format!("{} {}", &get_texts().add_account.account_exists, self.account_name);
 				let center_y = context.get_height() / 2;
 				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
 				context.print_at_position(pos_x, center_y, text.as_str());
 			}
 			AddAccountState::AddEmailRequest => {
 				self.show_account_data(true, false, false, context);
-				context.draw_request_footer("Add email for this account?".to_string(), "[Y]es | [N]o".to_string());
+				context.draw_request_footer(&get_texts().add_account.add_email_question);
 			}
 			AddAccountState::EnterEmail => {
 				self.show_account_data(true, false, false, context);
-				context.draw_input_footer("Enter email:".to_string(), &self.email_name)
+				context.draw_input_footer(&get_texts().account.email, &self.email_name)
 			}
 			AddAccountState::GeneratePasswordRequest => {
 				self.show_account_data(true, true, false, context);
-				context.draw_request_footer("Generate password for account?".to_string(), "[Y]es | [N]o".to_string());
+				context.draw_request_footer(&get_texts().add_account.generate_pwd_question);
 			}
 			AddAccountState::EnterPassword => {
 				self.show_account_data(true, true, false, context);
-				context.draw_input_footer("Enter password:".to_string(), &"".to_string())
+				context.draw_input_footer(&get_texts().account.password, &"".to_string())
 			}
 			AddAccountState::PasswordGenerated => {
 				self.show_account_data(true, true, true, context);
-				context.draw_control_footer(vec!["Secure password has been generated".to_string()]);
+				context.draw_control_footer(vec![&get_texts().add_account.pwd_generated]);
 			}
 			AddAccountState::PasswordSet => {
 				self.show_account_data(true, true, true, context);
-				context.draw_control_footer(vec!["Password set".to_string()]);
+				context.draw_control_footer(vec![&get_texts().add_account.pwd_set]);
 			}
 			AddAccountState::Cancel => {
-				let text = "Do you want to cancel the account creation?";
-				context.print_at_position(context.get_width() / 2 - text.len() as u16 /2, context.get_height() / 2, text);
-				context.draw_request_footer("".to_string(), "[Y]es | [N]o".to_string());
+				let text = &get_texts().add_account.cancel_question;
+				context.print_at_position(context.get_width() / 2 - text.len() as u16 / 2, context.get_height() / 2, text);
+				context.draw_request_footer(&"".to_string());
 			}
 		}
 	}
@@ -191,7 +193,7 @@ impl StateItem for AddEntryStateItem {
 						self.internal_state = AddAccountState::GeneratePasswordRequest;
 					}
 				}
-				if key_code == KeyCode::Esc{
+				if key_code == KeyCode::Esc {
 					self.internal_state = AddAccountState::Cancel;
 				}
 			}
@@ -199,7 +201,7 @@ impl StateItem for AddEntryStateItem {
 				if get_text_input(key_code, &mut self.email_name) {
 					self.internal_state = AddAccountState::GeneratePasswordRequest;
 				}
-				if key_code == KeyCode::Esc{
+				if key_code == KeyCode::Esc {
 					self.internal_state = AddAccountState::Cancel;
 				}
 			}
@@ -213,7 +215,7 @@ impl StateItem for AddEntryStateItem {
 						self.internal_state = AddAccountState::EnterPassword
 					}
 				}
-				if key_code == KeyCode::Esc{
+				if key_code == KeyCode::Esc {
 					self.internal_state = AddAccountState::Cancel;
 				}
 			}
@@ -222,18 +224,17 @@ impl StateItem for AddEntryStateItem {
 					self.internal_state = AddAccountState::PasswordSet;
 					self.finalize_account_creation();
 				}
-				if key_code == KeyCode::Esc{
+				if key_code == KeyCode::Esc {
 					self.internal_state = AddAccountState::Cancel;
 				}
 			}
 			AddAccountState::PasswordGenerated => {}
 			AddAccountState::PasswordSet => {}
 			AddAccountState::Cancel => {
-				if let Some(confirm)  = evaluate_yes_no_answer(key_code){
+				if let Some(confirm) = evaluate_yes_no_answer(key_code) {
 					if confirm {
 						self.switch_to_main_menu_state(0);
-					}
-					else {
+					} else {
 						self.internal_state = AddAccountState::SetAccount;
 					}
 				}

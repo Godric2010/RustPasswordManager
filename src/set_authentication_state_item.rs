@@ -7,6 +7,7 @@ use crate::state_item::{wait_for_seconds, StateItem};
 use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 use crate::input_handler::*;
+use crate::texts::get_texts;
 
 pub struct SetAuthenticationStateItem {
 	next_state: Arc<Mutex<bool>>,
@@ -73,32 +74,32 @@ impl StateItem for SetAuthenticationStateItem {
 		let center_y = context.get_height() / 2;
 		match self.internal_state {
 			SetAuthState::EnterPassword => {
-				context.print_at_position(pos_x, center_y - 1, "Set new master password:");
+				context.print_at_position(pos_x, center_y - 1, &get_texts().auth.set_new_master_pwd);
 				context.print_at_position(pos_x, center_y, "");
-				context.draw_control_footer(vec!["Press [\u{21B5}] to confirm input".to_string()]);
+				context.draw_control_footer(vec![&get_texts().input.enter]);
 				context.move_cursor_to_position(pos_x, center_y);
 			}
 			SetAuthState::ConfirmPassword => {
-				context.print_at_position(pos_x, center_y - 1, "Confirm new master password:");
+				context.print_at_position(pos_x, center_y - 1, &get_texts().auth.confirm_new_master_pwd);
 				context.print_at_position(pos_x, center_y, "");
-				context.draw_control_footer(vec!["[\u{21B5}] to confirm input".to_string(), "[ESC] to quit".to_string()]);
+				context.draw_control_footer(vec![&get_texts().input.enter, &get_texts().input.escape]);
 				context.move_cursor_to_position(pos_x, center_y);
 			}
 			SetAuthState::Success => {
-				let text = "Master password set!";
+				let text = &get_texts().auth.master_password_set;
 				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
 				context.print_at_position(pos_x, center_y, text);
 			}
 			SetAuthState::Failure => {
-				let text = "Confirmation failed";
+				let text = &get_texts().auth.confirm_failed;
 				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
 				context.print_at_position(pos_x, center_y, text);
 			}
 			SetAuthState::Cancel => {
-				let text = "Do you want to cancel setting a new master password?";
+				let text = &get_texts().auth.cancel_question;
 				let pos_x = context.get_width() / 2 - text.len() as u16 / 2;
 				context.print_at_position(pos_x, center_y, text);
-				context.draw_request_footer(String::new(), "[Y]es | [N]o".to_string());
+				context.draw_request_footer(&String::new());
 			}
 		}
 	}

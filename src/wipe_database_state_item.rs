@@ -5,6 +5,7 @@ use crate::file_accesssor::{delete_directory_and_files, read_password_from_disk}
 use crate::input_handler::{evaluate_yes_no_answer, get_text_input};
 use crate::state_item::{wait_for_seconds, StateItem};
 use crate::terminal_context::TerminalContext;
+use crate::texts::get_texts;
 use crate::transition::Transition;
 
 #[derive(PartialEq)]
@@ -48,23 +49,23 @@ impl StateItem for WipeDatabaseStateItem {
 		let center_x = context.get_width() / 2;
 		match self.wipe_state {
 			WipeState::ConfirmWipe => {
-				let are_you_sure_text = "Are you sure you want to wipe the database?";
-				let warning_text = "This action cannot be undone!";
+				let are_you_sure_text = &get_texts().wipe.are_you_sure_question;
+				let warning_text = &get_texts().wipe.warning;
 				context.print_at_position(center_x - are_you_sure_text.len() as u16 / 2, center_y, are_you_sure_text);
 				context.print_at_position(center_x - warning_text.len() as u16 / 2, center_y + 1, warning_text);
-				context.draw_control_footer(vec!["[Y]es".to_string(), "[N]o".to_string()]);
+				context.draw_control_footer(vec![&get_texts().misc.confirm_input]);
 			}
 			WipeState::EnterPassword => {
-				let text = "Deleting database... Confirmation required.";
+				let text = &get_texts().wipe.delete_msg;
 				context.print_at_position(center_x - text.len() as u16 / 2, center_y, text);
-				context.draw_input_footer("Enter master password to confirm:".to_string(), &String::new())
+				context.draw_input_footer(&get_texts().wipe.enter_pwd_request, &String::new())
 			}
 			WipeState::WipeSuccess => {
-				let text = "Database wiped successfully!";
+				let text = &get_texts().wipe.success_msg;
 				context.print_at_position(center_x - text.len() as u16 / 2, center_y, text);
 			}
 			WipeState::WipeFailure => {
-				let text = "Master Password wrong. Failed to wipe the database!";
+				let text = &get_texts().wipe.failure_msg;
 				context.print_at_position(center_x - text.len() as u16 / 2, center_y, text);
 			}
 		}

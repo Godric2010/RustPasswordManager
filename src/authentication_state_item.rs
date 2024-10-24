@@ -7,6 +7,7 @@ use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
+use crate::texts::get_texts;
 
 enum LockState {
 	Locked,
@@ -57,21 +58,21 @@ impl StateItem for AuthenticationStateItem {
 		let vert_center = context.get_height() / 2;
 		match self.lock_state {
 			LockState::Locked => {
-				let enter_prompt = "Please enter master password!";
+				let enter_prompt = &get_texts().auth.enter_pwd_promt;
 				let pos_x = (context.get_width() - enter_prompt.len() as u16) / 2;
 				context.print_at_position(pos_x, vert_center, enter_prompt);
 				context.print_at_position(pos_x, vert_center + 1, "");
-				context.draw_control_footer(vec!["[\u{21B5}] to confirm input".to_string()]);
+				context.draw_control_footer(vec![&get_texts().input.enter]);
 				context.move_cursor_to_position(pos_x, vert_center + 1);
 			}
 			LockState::Invalid => {
-				let enter_prompt = "Invalid password!";
+				let enter_prompt = &get_texts().auth.invalid_pwd;
 				let pos_x_enter = (context.get_width() - enter_prompt.len() as u16) / 2;
 				context.print_at_position(pos_x_enter, vert_center, enter_prompt);
-				context.draw_control_footer(vec!["[\u{21B5}] to try again".to_string()])
+				context.draw_control_footer(vec![&get_texts().input.enter])
 			}
 			LockState::Unlocked => {
-				let enter_prompt = "Password correct!";
+				let enter_prompt = &get_texts().auth.valid_pwd;
 				let pos_x_enter = (context.get_width() - enter_prompt.len() as u16) / 2;
 				context.print_at_position(pos_x_enter, vert_center, enter_prompt);
 			}

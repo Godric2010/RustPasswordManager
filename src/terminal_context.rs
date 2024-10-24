@@ -5,6 +5,7 @@ use crossterm::{cursor, event, execute, queue, terminal::{self, ClearType}, Exec
 use std::io::{stdout, Stdout, Write};
 use std::time::Duration;
 use crossterm::cursor::{MoveTo, SetCursorStyle};
+use crate::texts::get_texts;
 
 pub enum StyleAttribute {
 	Underline,
@@ -72,7 +73,7 @@ impl TerminalContext {
 		self.stdout.flush().unwrap();
 	}
 
-	pub fn draw_control_footer(&mut self, content: Vec<String>) {
+	pub fn draw_control_footer(&mut self, content: Vec<&String>) {
 		let divider_y = self.height - 2;
 		let content_y = self.height - 1;
 		self.print_line(0, divider_y, self.width - 1);
@@ -94,7 +95,7 @@ impl TerminalContext {
 		self.stdout.flush().unwrap();
 	}
 
-	pub fn draw_input_footer(&mut self, heading: String, input_buffer: &String) {
+	pub fn draw_input_footer(&mut self, heading: &String, input_buffer: &String) {
 		let divider_y = self.height - 3;
 		let heading_y = self.height - 2;
 		let input_buffer_y = self.height - 1;
@@ -106,14 +107,14 @@ impl TerminalContext {
 		self.move_cursor_to_position(input_buffer.len() as u16, input_buffer_y);
 	}
 
-	pub fn draw_request_footer(&mut self, heading: String, options: String) {
+	pub fn draw_request_footer(&mut self, heading: &String) {
 		let divider_y = self.height - 3;
 		let heading_y = self.height - 2;
 		let options_y = self.height - 1;
 
 		self.print_line(0, divider_y, self.width - 1);
 		queue!(self.stdout, MoveTo(self.origin_x, self.origin_y + heading_y), Print(heading)).expect("Could not execute queue!");
-		queue!(self.stdout, MoveTo(self.origin_x, self.origin_y + options_y), Print(options)).expect("Could not execute queue!");
+		queue!(self.stdout, MoveTo(self.origin_x, self.origin_y + options_y), Print(&get_texts().misc.confirm_input)).expect("Could not execute queue!");
 		self.stdout.flush().unwrap();
 	}
 

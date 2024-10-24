@@ -19,10 +19,22 @@ mod show_account_state_item;
 mod wipe_database_state_item;
 mod clipboard_controller;
 mod page_list_view;
+mod texts;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");
 
+	texts::init_texts();
+
+	if let Some(mut context) = create_terminal_context() {
+		let mut state_manager = state_manager::StateManager::new();
+		state_manager.run(&mut context);
+		context.destroy();
+	}
+
+}
+
+fn create_terminal_context() -> Option<TerminalContext> {
 	let (terminal_width, terminal_height) = size().expect("Could not read terminal size");
 	let min_width: u16 = 60;
 	let min_height: u16 = 20;
@@ -30,7 +42,7 @@ fn main() {
 
 	if terminal_width < min_width || terminal_height < min_height {
 		println!("Please resize the terminal to at least {}x{} for proper display!", min_width, min_height);
-		return;
+		return None;
 	}
 
 	let mut frame_width = (terminal_width as f32 * 0.75).min(terminal_width as f32) as u16;
@@ -44,9 +56,6 @@ fn main() {
 	let origin_x = (terminal_width - frame_width) / 2;
 	let origin_y = (terminal_height - frame_height) / 2;
 
-	let mut context = TerminalContext::new(origin_x, origin_y, frame_width, frame_height);
-	let mut state_manager = state_manager::StateManager::new();
-	state_manager.run(&mut context);
-
-	context.destroy();
+	let context = TerminalContext::new(origin_x, origin_y, frame_width, frame_height);
+	Some(context)
 }

@@ -18,11 +18,11 @@
   - [x] List Accounts state
   - [x] Add Account state
   - [x] Set Master Password
-- [ ] Window management 
+- [x] Window management 
   - [x] Define minimum space for app
   - [x] Scale app window based on available space
   - [x] Output safe error if window is too small
-  - [ ] Store all texts to display in a resource file
+  - [x] Store all texts to display in a resource file
 - [ ] Password handling
   - [ ] Hide passwords correctly
   - [ ] Handle cursor gracefully

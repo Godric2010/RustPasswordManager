@@ -1,6 +1,7 @@
 use crossterm::event::KeyCode;
 use crate::state_item::StateItem;
 use crate::terminal_context::{StyleAttribute, TerminalContext};
+use crate::texts::get_texts;
 use crate::transition::Transition;
 
 pub struct MainMenuStateItem {
@@ -12,13 +13,7 @@ pub struct MainMenuStateItem {
 
 impl MainMenuStateItem {
 	pub fn new() -> Self {
-		let menu_items = vec![
-			"[1] Add new account".to_string(),
-			"[2] List all accounts".to_string(),
-			"[3] Set new master password".to_string(),
-			"[4] Wipe database".to_string(),
-			"[5] Exit".to_string(),
-		];
+		let menu_items = get_texts().main_menu.get_menu_items();
 
 		let menu_transitions = vec![
 			Transition::ToAddAccount,
@@ -39,7 +34,7 @@ impl MainMenuStateItem {
 
 impl StateItem for MainMenuStateItem {
 	fn display(&self, context: &mut TerminalContext) {
-		let heading = "Main Menu";
+		let heading = &get_texts().main_menu.heading;
 
 		let y_start_pos = context.get_height() / 2 - 4;
 		let x_menu_pos = (context.get_width() - heading.len() as u16) / 2;
@@ -54,7 +49,7 @@ impl StateItem for MainMenuStateItem {
 			}
 		}
 
-		let content = vec!["[\u{25b2}] to move down ".to_string(), "[\u{25BC}] to move up ".to_string(), "[\u{21B5}] to select".to_string()];
+		let content = vec![&get_texts().input.down_arrow, &get_texts().input.up_arrow, &get_texts().input.enter];
 		context.draw_control_footer(content);
 	}
 

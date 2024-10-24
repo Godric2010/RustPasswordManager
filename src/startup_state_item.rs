@@ -4,6 +4,7 @@ use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
+use crate::texts::get_texts;
 
 pub struct StartupStateItem {
 	next_state: Transition,
@@ -30,7 +31,7 @@ impl StartupStateItem {
 
 impl StateItem for StartupStateItem {
 	fn display(&self, context: &mut TerminalContext) {
-		let welcome_msg = "Rusty Password Manager";
+		let welcome_msg = &get_texts().misc.welcome;
 		let pos_y = context.get_height() / 2;
 		let pos_x = (context.get_width() - welcome_msg.len() as u16) / 2;
 		context.print_at_position(pos_x, pos_y, welcome_msg);
