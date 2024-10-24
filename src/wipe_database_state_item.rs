@@ -4,7 +4,7 @@ use crate::encryption_controller::PasswordEncryption;
 use crate::file_accesssor::{delete_directory_and_files, read_password_from_disk};
 use crate::input_handler::{evaluate_yes_no_answer, get_text_input};
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::{TerminalContext, Visibility};
 use crate::texts::get_texts;
 use crate::transition::Transition;
 
@@ -58,7 +58,7 @@ impl StateItem for WipeDatabaseStateItem {
 			WipeState::EnterPassword => {
 				let text = &get_texts().wipe.delete_msg;
 				context.print_at_position(center_x - text.len() as u16 / 2, center_y, text);
-				context.draw_input_footer(&get_texts().wipe.enter_pwd_request, &String::new())
+				context.draw_input_footer(&get_texts().wipe.enter_pwd_request, Visibility::Hidden)
 			}
 			WipeState::WipeSuccess => {
 				let text = &get_texts().wipe.success_msg;

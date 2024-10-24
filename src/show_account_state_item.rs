@@ -80,7 +80,7 @@ impl ShowAccountStateItem {
 		if self.clipboard_controller.get_countdown_duration() == time_left {
 			context.draw_control_footer(vec![&get_texts().show_account.copy_msg])
 		} else {
-			let countdown =	format!("{} {}s", &get_texts().show_account.copy_countdown, time_left);
+			let countdown = format!("{} {}s", &get_texts().show_account.copy_countdown, time_left);
 			context.draw_control_footer(vec![&countdown])
 		};
 	}
@@ -229,7 +229,7 @@ impl ShowAccountStateItem {
 			context.print_styled_at_position(0, 9, &self.account.password, StyleAttribute::InverseColor);
 		} else {
 			context.print_at_position(0, 8, &get_texts().account.password);
-			context.print_at_position(0, 9, &self.account.password);
+			context.print_hidden_password_at_position(0, 9, self.account.password.len());
 		}
 	}
 

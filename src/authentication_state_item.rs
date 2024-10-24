@@ -61,7 +61,7 @@ impl StateItem for AuthenticationStateItem {
 				let enter_prompt = &get_texts().auth.enter_pwd_promt;
 				let pos_x = (context.get_width() - enter_prompt.len() as u16) / 2;
 				context.print_at_position(pos_x, vert_center, enter_prompt);
-				context.print_at_position(pos_x, vert_center + 1, "");
+				context.print_hidden_password_at_position(pos_x, vert_center + 1, self.input_buffer.len());
 				context.draw_control_footer(vec![&get_texts().input.enter]);
 				context.move_cursor_to_position(pos_x, vert_center + 1);
 			}

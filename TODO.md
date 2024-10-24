@@ -24,9 +24,9 @@
   - [x] Output safe error if window is too small
   - [x] Store all texts to display in a resource file
 - [ ] Password handling
-  - [ ] Hide passwords correctly
+  - [x] Hide passwords correctly
   - [ ] Handle cursor gracefully
-  - [ ] Add option to show password on editing
+  - [x] Add option to show password on editing
 
 ## Version 1.1
 - [ ] Select database storage location

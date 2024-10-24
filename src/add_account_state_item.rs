@@ -1,6 +1,6 @@
 use crate::database_context::DatabaseManager;
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::{TerminalContext, Visibility};
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
@@ -56,7 +56,7 @@ impl AddEntryStateItem {
 		}
 		context.print_at_position(0, 8, &get_texts().account.password);
 		if show_password {
-			context.print_at_position(0, 9, "*********************");
+			context.print_hidden_password_at_position(0, 9, self.password_buffer.len());
 		}
 	}
 
@@ -124,7 +124,7 @@ impl StateItem for AddEntryStateItem {
 		match self.internal_state {
 			AddAccountState::SetAccount => {
 				self.show_account_data(false, false, false, context);
-				context.draw_input_footer(&get_texts().account.account_name, &self.account_name)
+				context.draw_input_footer(&get_texts().account.account_name, Visibility::Visible(self.account_name.clone()))
 			}
 			AddAccountState::AccountExists => {
 				let text = format!("{} {}", &get_texts().add_account.account_exists, self.account_name);
@@ -138,7 +138,7 @@ impl StateItem for AddEntryStateItem {
 			}
 			AddAccountState::EnterEmail => {
 				self.show_account_data(true, false, false, context);
-				context.draw_input_footer(&get_texts().account.email, &self.email_name)
+				context.draw_input_footer(&get_texts().account.email, Visibility::Visible(self.email_name.clone()))
 			}
 			AddAccountState::GeneratePasswordRequest => {
 				self.show_account_data(true, true, false, context);
@@ -146,7 +146,7 @@ impl StateItem for AddEntryStateItem {
 			}
 			AddAccountState::EnterPassword => {
 				self.show_account_data(true, true, false, context);
-				context.draw_input_footer(&get_texts().account.password, &"".to_string())
+				context.draw_input_footer(&get_texts().account.password, Visibility::Hidden)
 			}
 			AddAccountState::PasswordGenerated => {
 				self.show_account_data(true, true, true, context);

@@ -10,7 +10,7 @@ pub struct Misc {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Input{
+pub struct Input {
 	pub up_arrow: String,
 	pub down_arrow: String,
 	pub left_arrow: String,
@@ -36,7 +36,7 @@ impl MainMenu {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Account{
+pub struct Account {
 	pub account_name: String,
 	pub email: String,
 	pub password: String,
@@ -54,7 +54,7 @@ pub struct AddAccount {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct ListAccounts{
+pub struct ListAccounts {
 	pub heading: String,
 	pub search: String,
 	pub search_input: String,
@@ -62,7 +62,7 @@ pub struct ListAccounts{
 }
 
 #[derive(Deserialize, Debug)]
-pub struct ShowAccount{
+pub struct ShowAccount {
 	pub heading: String,
 	pub delete_question: String,
 	pub save_question: String,
@@ -75,8 +75,8 @@ pub struct ShowAccount{
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Auth{
-	pub enter_pwd_promt:String,
+pub struct Auth {
+	pub enter_pwd_promt: String,
 	pub invalid_pwd: String,
 	pub valid_pwd: String,
 	pub set_new_master_pwd: String,
@@ -87,7 +87,7 @@ pub struct Auth{
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Wipe{
+pub struct Wipe {
 	pub are_you_sure_question: String,
 	pub warning: String,
 	pub delete_msg: String,
@@ -96,6 +96,25 @@ pub struct Wipe{
 	pub failure_msg: String,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct Password {
+	one: char,
+	two: char,
+	three: char,
+	four: char,
+	five: char,
+	six: char,
+	seven: char,
+	eight: char,
+	nine: char,
+	ten: char,
+}
+
+impl Password {
+	pub fn get_symbols(&self) -> Vec<char> {
+		vec![self.one, self.two, self.three, self.four, self.five, self.six, self.seven, self.eight, self.nine, self.ten]
+	}
+}
 
 #[derive(Deserialize, Debug)]
 pub struct Texts {
@@ -108,6 +127,7 @@ pub struct Texts {
 	pub show_account: ShowAccount,
 	pub auth: Auth,
 	pub wipe: Wipe,
+	pub password: Password,
 }
 
 pub fn load_texts() -> Texts {
