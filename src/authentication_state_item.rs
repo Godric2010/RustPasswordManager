@@ -7,7 +7,9 @@ use crate::terminal_context::TerminalContext;
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
+use crate::password_widget::PasswordWidget;
 use crate::texts::get_texts;
+use crate::widget::Widget;
 
 enum LockState {
 	Locked,
@@ -21,19 +23,22 @@ pub struct AuthenticationStateItem {
 	lock_state: LockState,
 	input_buffer: String,
 	db_manager: Arc<Mutex<DatabaseManager>>,
+	password_widget: PasswordWidget,
 }
 
 impl AuthenticationStateItem {
 	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>) -> Self {
 		let pwd_string = read_password_from_disk();
 		let master_password = PasswordEncryption::create_from_string(pwd_string.unwrap()).unwrap();
+		let input_buffer = String::new();
 
 		db_manager.lock().unwrap().load_database_from_disk();
 		AuthenticationStateItem {
 			next_state_ready: Arc::new(Mutex::new(false)),
 			master_password,
+			password_widget: PasswordWidget::new(input_buffer.clone()),
 			lock_state: LockState::Locked,
-			input_buffer: String::new(),
+			input_buffer,
 			db_manager,
 		}
 	}
@@ -61,7 +66,7 @@ impl StateItem for AuthenticationStateItem {
 				let enter_prompt = &get_texts().auth.enter_pwd_promt;
 				let pos_x = (context.get_width() - enter_prompt.len() as u16) / 2;
 				context.print_at_position(pos_x, vert_center, enter_prompt);
-				context.print_hidden_password_at_position(pos_x, vert_center + 1, self.input_buffer.len());
+				self.password_widget.display(context, pos_x, vert_center + 1);
 				context.draw_control_footer(vec![&get_texts().input.enter]);
 				context.move_cursor_to_position(pos_x, vert_center + 1);
 			}
@@ -89,6 +94,7 @@ impl StateItem for AuthenticationStateItem {
 				if get_text_input(key_code, &mut self.input_buffer) {
 					self.test_password();
 				}
+				self.password_widget.update_password(self.input_buffer.clone());
 			}
 			LockState::Invalid => {
 				if key_code == KeyCode::Enter {

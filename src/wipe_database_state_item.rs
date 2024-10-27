@@ -3,10 +3,12 @@ use crossterm::event::KeyCode;
 use crate::encryption_controller::PasswordEncryption;
 use crate::file_accesssor::{delete_directory_and_files, read_password_from_disk};
 use crate::input_handler::{evaluate_yes_no_answer, get_text_input};
+use crate::password_widget::PasswordWidget;
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::{TerminalContext, Visibility};
+use crate::terminal_context::{TerminalContext};
 use crate::texts::get_texts;
 use crate::transition::Transition;
+use crate::widget::Widget;
 
 #[derive(PartialEq)]
 enum WipeState {
@@ -19,6 +21,7 @@ pub struct WipeDatabaseStateItem {
 	next_state_ready: Arc<Mutex<bool>>,
 	wipe_state: WipeState,
 	password_buffer: String,
+	password_widget: PasswordWidget,
 }
 
 impl WipeDatabaseStateItem {
@@ -27,6 +30,7 @@ impl WipeDatabaseStateItem {
 			next_state_ready: Arc::new(Mutex::new(false)),
 			wipe_state: WipeState::ConfirmWipe,
 			password_buffer: String::new(),
+			password_widget: PasswordWidget::new(String::new()),
 		}
 	}
 
@@ -58,7 +62,7 @@ impl StateItem for WipeDatabaseStateItem {
 			WipeState::EnterPassword => {
 				let text = &get_texts().wipe.delete_msg;
 				context.print_at_position(center_x - text.len() as u16 / 2, center_y, text);
-				context.draw_input_footer(&get_texts().wipe.enter_pwd_request, Visibility::Hidden)
+				self.password_widget.display_as_footer(context);
 			}
 			WipeState::WipeSuccess => {
 				let text = &get_texts().wipe.success_msg;
@@ -90,6 +94,7 @@ impl StateItem for WipeDatabaseStateItem {
 				if get_text_input(key_code, &mut self.password_buffer) {
 					self.validate_password_input();
 				}
+				self.password_widget.update_password(self.password_buffer.clone())
 			}
 			WipeState::WipeSuccess => {}
 			WipeState::WipeFailure => {}

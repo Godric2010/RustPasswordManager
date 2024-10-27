@@ -20,6 +20,8 @@ mod wipe_database_state_item;
 mod clipboard_controller;
 mod page_list_view;
 mod texts;
+mod password_widget;
+mod widget;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");

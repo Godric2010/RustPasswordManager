@@ -1,6 +1,6 @@
 use crate::database_context::DatabaseManager;
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::{TerminalContext, Visibility};
+use crate::terminal_context::{TerminalContext};
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
@@ -8,7 +8,9 @@ use rand::distributions::Alphanumeric;
 use rand::Rng;
 use rand::seq::SliceRandom;
 use crate::input_handler::*;
+use crate::password_widget::PasswordWidget;
 use crate::texts::get_texts;
+use crate::widget::Widget;
 
 #[derive(Eq, PartialEq)]
 enum AddAccountState {
@@ -29,6 +31,7 @@ pub struct AddEntryStateItem {
 	account_name: String,
 	email_name: String,
 	password_buffer: String,
+	password_widget: PasswordWidget,
 	db_manager: Arc<Mutex<DatabaseManager>>,
 }
 
@@ -40,6 +43,7 @@ impl AddEntryStateItem {
 			account_name: String::new(),
 			email_name: String::new(),
 			password_buffer: String::new(),
+			password_widget: PasswordWidget::new(String::new()),
 			db_manager,
 		}
 	}
@@ -56,7 +60,7 @@ impl AddEntryStateItem {
 		}
 		context.print_at_position(0, 8, &get_texts().account.password);
 		if show_password {
-			context.print_hidden_password_at_position(0, 9, self.password_buffer.len());
+			self.password_widget.display(context, 0, 9);
 		}
 	}
 
@@ -124,7 +128,7 @@ impl StateItem for AddEntryStateItem {
 		match self.internal_state {
 			AddAccountState::SetAccount => {
 				self.show_account_data(false, false, false, context);
-				context.draw_input_footer(&get_texts().account.account_name, Visibility::Visible(self.account_name.clone()))
+				context.draw_input_footer(&get_texts().account.account_name, self.account_name.clone())
 			}
 			AddAccountState::AccountExists => {
 				let text = format!("{} {}", &get_texts().add_account.account_exists, self.account_name);
@@ -138,7 +142,7 @@ impl StateItem for AddEntryStateItem {
 			}
 			AddAccountState::EnterEmail => {
 				self.show_account_data(true, false, false, context);
-				context.draw_input_footer(&get_texts().account.email, Visibility::Visible(self.email_name.clone()))
+				context.draw_input_footer(&get_texts().account.email, self.email_name.clone())
 			}
 			AddAccountState::GeneratePasswordRequest => {
 				self.show_account_data(true, true, false, context);
@@ -146,7 +150,7 @@ impl StateItem for AddEntryStateItem {
 			}
 			AddAccountState::EnterPassword => {
 				self.show_account_data(true, true, false, context);
-				context.draw_input_footer(&get_texts().account.password, Visibility::Hidden)
+				self.password_widget.display_as_footer(context);
 			}
 			AddAccountState::PasswordGenerated => {
 				self.show_account_data(true, true, true, context);
@@ -209,6 +213,7 @@ impl StateItem for AddEntryStateItem {
 				if let Some(confirm) = evaluate_yes_no_answer(key_code) {
 					if confirm {
 						self.generate_password();
+						self.password_widget.update_password(self.password_buffer.clone());
 						self.internal_state = AddAccountState::PasswordGenerated;
 						self.finalize_account_creation();
 					} else {
@@ -220,6 +225,7 @@ impl StateItem for AddEntryStateItem {
 				}
 			}
 			AddAccountState::EnterPassword => {
+				self.password_widget.update_password(self.password_buffer.clone());
 				if get_text_input(key_code, &mut self.password_buffer) {
 					self.internal_state = AddAccountState::PasswordSet;
 					self.finalize_account_creation();

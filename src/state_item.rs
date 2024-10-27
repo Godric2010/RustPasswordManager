@@ -11,6 +11,7 @@ pub trait StateItem{
 	fn update_display(&self) -> bool;
 
 	fn display_content(&self, context: &mut TerminalContext){
+		context.clear_screen();
 		context.draw_border();
 		self.display(context);
 	}

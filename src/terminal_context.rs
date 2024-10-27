@@ -4,7 +4,6 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use crossterm::style::{Print, Stylize};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use crossterm::{cursor, event, execute, queue, terminal::{self, ClearType}, ExecutableCommand};
-use rand::prelude::SliceRandom;
 use std::io::{stdout, Stdout, Write};
 use std::time::Duration;
 
@@ -101,15 +100,10 @@ impl TerminalContext {
 		self.stdout.flush().unwrap();
 	}
 
-	pub fn draw_input_footer(&mut self, heading: &String, input_buffer: Visibility) {
+	pub fn draw_input_footer(&mut self, heading: &String, input_buffer: String) {
 		let divider_y = self.height - 3;
 		let heading_y = self.height - 2;
 		let input_buffer_y = self.height - 1;
-
-		let input_buffer = match input_buffer {
-			Visibility::Hidden => self.generate_hidden_pwd_string(),
-			Visibility::Visible(str) => str,
-		};
 
 		self.print_line(0, divider_y, self.width - 1);
 		queue!(self.stdout, MoveTo(self.origin_x, self.origin_y + heading_y), Print(heading)).expect("Could not execute queue!");
@@ -163,28 +157,6 @@ impl TerminalContext {
 
 		queue!(self.stdout, MoveTo(self.origin_x + x, self.origin_y + y), cursor::Hide, styled_content).expect("Could not move cursor!");
 		self.stdout.flush().expect("Could not flush stdout");
-	}
-
-	pub fn print_hidden_password_at_position(&mut self, pos_x: u16, pos_y: u16, pwd_len: usize) {
-		if pwd_len == 0 {
-			return;
-		}
-		let hidden_string = self.generate_hidden_pwd_string();
-		self.print_at_position(pos_x, pos_y, &hidden_string)
-	}
-
-	fn generate_hidden_pwd_string(&self) -> String {
-		let hide_chars = &get_texts().password.get_symbols();
-		let length = 30;
-		let mut rng = rand::thread_rng();
-
-		let mut hidden_char_vec = vec![];
-		for _ in 0..length {
-			let special_char = *hide_chars.choose(&mut rng).unwrap();
-			hidden_char_vec.push(special_char.clone());
-		}
-		let hidden_string: String = hidden_char_vec.into_iter().collect();
-		hidden_string
 	}
 
 	pub fn move_cursor_to_position(&mut self, x: u16, y: u16) {

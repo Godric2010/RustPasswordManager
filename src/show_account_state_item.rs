@@ -7,7 +7,9 @@ use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::cmp::PartialEq;
 use std::sync::{Arc, Mutex};
+use crate::password_widget::PasswordWidget;
 use crate::texts::get_texts;
+use crate::widget::Widget;
 
 #[derive(PartialEq)]
 enum ShowAccountState {
@@ -26,11 +28,13 @@ pub struct ShowAccountStateItem {
 	next_state: Option<Transition>,
 	db_manager: Arc<Mutex<DatabaseManager>>,
 	clipboard_controller: ClipboardController,
+	password_widget: PasswordWidget,
 }
 
 impl ShowAccountStateItem {
 	pub fn new(db_manager: Arc<Mutex<DatabaseManager>>, account: Account) -> Self {
 		Self {
+			password_widget: PasswordWidget::new(account.password.clone()),
 			account,
 			internal_state: Arc::new(Mutex::new(ShowAccountState::ShowAccount)),
 			db_manager,
@@ -226,23 +230,28 @@ impl ShowAccountStateItem {
 	fn show_password(&self, context: &mut TerminalContext, highlighted: bool) {
 		if highlighted {
 			context.print_styled_at_position(0, 8, &get_texts().account.password, StyleAttribute::Bold);
-			context.print_styled_at_position(0, 9, &self.account.password, StyleAttribute::InverseColor);
+			self.password_widget.display(context, 0, 9);
 		} else {
 			context.print_at_position(0, 8, &get_texts().account.password);
-			context.print_hidden_password_at_position(0, 9, self.account.password.len());
+			self.password_widget.display(context, 0, 9)
 		}
 	}
 
 	fn edit_account_input(&mut self, key_code: KeyCode, text_buffer: &mut String, next_state: ShowAccountState, prev_state: ShowAccountState) {
 		match key_code {
-			KeyCode::Enter => { self.internal_state = Arc::new(Mutex::new(ShowAccountState::SaveChanges)) }
+			KeyCode::Enter => { self.change_internal_state(ShowAccountState::SaveChanges) }
 			KeyCode::Backspace => { text_buffer.pop(); }
 			KeyCode::Char(c) => text_buffer.push(c),
-			KeyCode::Up => { self.internal_state = Arc::new(Mutex::new(prev_state)) }
-			KeyCode::Down => { self.internal_state = Arc::new(Mutex::new(next_state)) }
+			KeyCode::Up => { self.change_internal_state(prev_state) }
+			KeyCode::Down => { self.change_internal_state(next_state) }
 
 			_ => (),
 		};
+	}
+
+	fn change_internal_state(&mut self, new_state: ShowAccountState) {
+		self.password_widget.change_visibility(new_state == ShowAccountState::EditPassword);
+		self.internal_state = Arc::new(Mutex::new(new_state));
 	}
 }
 
