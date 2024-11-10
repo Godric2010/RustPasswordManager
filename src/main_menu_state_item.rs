@@ -1,6 +1,6 @@
 use crossterm::event::KeyCode;
 use crate::state_item::StateItem;
-use crate::terminal_context::{StyleAttribute, TerminalContext};
+use crate::terminal_context::{StyleAttribute, TerminalContextOld};
 use crate::texts::get_texts;
 use crate::transition::Transition;
 
@@ -33,7 +33,7 @@ impl MainMenuStateItem {
 }
 
 impl StateItem for MainMenuStateItem {
-	fn display(&self, context: &mut TerminalContext) {
+	fn display(&self, context: &mut TerminalContextOld) {
 		let heading = &get_texts().main_menu.heading;
 
 		let y_start_pos = context.get_height() / 2 - 4;

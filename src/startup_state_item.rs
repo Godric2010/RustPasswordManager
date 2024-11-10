@@ -1,6 +1,6 @@
 use crate::file_accesssor::does_directory_and_files_exist;
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::TerminalContextOld;
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
@@ -30,7 +30,7 @@ impl StartupStateItem {
 }
 
 impl StateItem for StartupStateItem {
-	fn display(&self, context: &mut TerminalContext) {
+	fn display(&self, context: &mut TerminalContextOld) {
 		let welcome_msg = &get_texts().misc.welcome;
 		let pos_y = context.get_height() / 2;
 		let pos_x = (context.get_width() - welcome_msg.len() as u16) / 2;

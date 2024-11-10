@@ -3,7 +3,7 @@ use crossterm::event::KeyCode;
 use crate::database_context::{Account, DatabaseManager};
 use crate::page_list_view::PageView;
 use crate::state_item::StateItem;
-use crate::terminal_context::{StyleAttribute, TerminalContext};
+use crate::terminal_context::{StyleAttribute, TerminalContextOld};
 use crate::texts::get_texts;
 use crate::transition::Transition;
 
@@ -56,13 +56,13 @@ impl ListAccountsState {
 	}
 
 
-	fn show_search_area(&self, context: &mut TerminalContext, search_str: &String) {
+	fn show_search_area(&self, context: &mut TerminalContextOld, search_str: &String) {
 		context.print_styled_at_position(0, 2, &get_texts().list_accounts.search, StyleAttribute::InverseColor);
 		context.print_at_position(0, 3, search_str);
 		context.print_line(0, 4, context.get_width() - 1);
 	}
 
-	fn show_list_of_accounts(&self, context: &mut TerminalContext) {
+	fn show_list_of_accounts(&self, context: &mut TerminalContextOld) {
 		let y_start = 5u16;
 		self.page_view.display_page(context, 0, y_start);
 	}
@@ -146,7 +146,7 @@ impl ListAccountsState {
 }
 
 impl StateItem for ListAccountsState {
-	fn display(&self, context: &mut TerminalContext) {
+	fn display(&self, context: &mut TerminalContextOld) {
 		context.print_at_position(0, 0, &get_texts().list_accounts.heading);
 
 		let control_footer_help;

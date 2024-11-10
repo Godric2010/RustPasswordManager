@@ -18,7 +18,7 @@ pub enum Visibility {
 	Visible(String),
 }
 
-pub struct TerminalContext {
+pub struct TerminalContextOld {
 	stdout: Stdout,
 	origin_x: u16,
 	origin_y: u16,
@@ -26,7 +26,7 @@ pub struct TerminalContext {
 	height: u16,
 }
 
-impl TerminalContext {
+impl TerminalContextOld {
 	pub fn new(origin_x: u16, origin_y: u16, width: u16, height: u16) -> Self {
 		let mut context = Self {
 			stdout: stdout(),

@@ -2,15 +2,15 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use crossterm::event::KeyCode;
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::TerminalContextOld;
 use crate::transition::Transition;
 
 pub trait StateItem{
-	fn display(&self, context: &mut TerminalContext);
+	fn display(&self, context: &mut TerminalContextOld);
 
 	fn update_display(&self) -> bool;
 
-	fn display_content(&self, context: &mut TerminalContext){
+	fn display_content(&self, context: &mut TerminalContextOld){
 		context.clear_screen();
 		context.draw_border();
 		self.display(context);

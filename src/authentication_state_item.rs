@@ -3,7 +3,7 @@ use crate::encryption_controller::PasswordEncryption;
 use crate::file_accesssor::read_password_from_disk;
 use crate::input_handler::get_text_input;
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::TerminalContextOld;
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
@@ -59,7 +59,7 @@ impl AuthenticationStateItem {
 }
 
 impl StateItem for AuthenticationStateItem {
-	fn display(&self, context: &mut TerminalContext) {
+	fn display(&self, context: &mut TerminalContextOld) {
 		let vert_center = context.get_height() / 2;
 		match self.lock_state {
 			LockState::Locked => {

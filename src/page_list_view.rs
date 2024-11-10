@@ -1,5 +1,5 @@
 use crate::database_context::Account;
-use crate::terminal_context::{StyleAttribute, TerminalContext};
+use crate::terminal_context::{StyleAttribute, TerminalContextOld};
 
 struct Entry {
 	account_id: i32,
@@ -44,7 +44,7 @@ impl Page {
 		}
 	}
 
-	pub fn display_entries(&self, context: &mut TerminalContext, pos_x: u16, pos_y: u16) {
+	pub fn display_entries(&self, context: &mut TerminalContextOld, pos_x: u16, pos_y: u16) {
 		for (idx, entry) in self.entries.iter().enumerate() {
 			if idx == self.selected_idx {
 				context.print_styled_at_position(pos_x, pos_y + idx as u16, &entry.get_account_name(), StyleAttribute::InverseColor);
@@ -102,7 +102,7 @@ impl PageView {
 		}
 	}
 
-	pub fn display_page(&self, context: &mut TerminalContext, pos_x: u16, pos_y: u16) {
+	pub fn display_page(&self, context: &mut TerminalContextOld, pos_x: u16, pos_y: u16) {
 		let page_text = format!("[{}/{}]", self.selected_idx + 1, self.pages.len());
 		let page_text_x_pos = context.get_width() - 1 - page_text.len() as u16;
 

@@ -4,7 +4,7 @@ use crate::database_context::{DatabaseManager};
 use crate::encryption_controller::{PasswordEncryption};
 use crate::file_accesssor::{does_directory_and_files_exist, write_password_to_disk};
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::TerminalContextOld;
 use crate::transition::Transition;
 use crate::input_handler::*;
 use crate::texts::get_texts;
@@ -69,7 +69,7 @@ impl SetAuthenticationStateItem {
 
 
 impl StateItem for SetAuthenticationStateItem {
-	fn display(&self, context: &mut TerminalContext) {
+	fn display(&self, context: &mut TerminalContextOld) {
 		let pos_x = context.get_width() / 4;
 		let center_y = context.get_height() / 2;
 		match self.internal_state {

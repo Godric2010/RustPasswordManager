@@ -7,7 +7,7 @@ use crate::set_authentication_state_item::SetAuthenticationStateItem;
 use crate::show_account_state_item::ShowAccountStateItem;
 use crate::startup_state_item::StartupStateItem;
 use crate::state_item::StateItem;
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::TerminalContextOld;
 use crate::transition::Transition;
 use crate::wipe_database_state_item::WipeDatabaseStateItem;
 use std::sync::{Arc, Mutex};
@@ -35,7 +35,7 @@ impl StateManager {
 		self.state = Some(next_state);
 	}
 
-	pub fn run(&mut self, context: &mut TerminalContext) {
+	pub fn run(&mut self, context: &mut TerminalContextOld) {
 		let mut display_changed = true;
 
 		while self.active {

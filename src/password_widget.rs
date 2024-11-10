@@ -1,5 +1,5 @@
 use rand::seq::SliceRandom;
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::TerminalContextOld;
 use crate::texts::get_texts;
 use crate::widget::Widget;
 
@@ -11,13 +11,13 @@ pub struct PasswordWidget {
 
 
 impl Widget for PasswordWidget {
-	fn display(&self, context: &mut TerminalContext, pos_x: u16, pos_y: u16) {
+	fn display(&self, context: &mut TerminalContextOld, pos_x: u16, pos_y: u16) {
 		if let Some(str) = self.get_password_to_display().clone() {
 			context.print_at_position(pos_x, pos_y, str)
 		}
 	}
 
-	fn display_as_footer(&self, contxt: &mut TerminalContext) {
+	fn display_as_footer(&self, contxt: &mut TerminalContextOld) {
 		let heading = &get_texts().account.password;
 		let content = if let Some(str) = self.get_password_to_display() {
 			str.clone()

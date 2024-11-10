@@ -5,7 +5,7 @@ use crate::file_accesssor::{delete_directory_and_files, read_password_from_disk}
 use crate::input_handler::{evaluate_yes_no_answer, get_text_input};
 use crate::password_widget::PasswordWidget;
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::{TerminalContext};
+use crate::terminal_context::{TerminalContextOld};
 use crate::texts::get_texts;
 use crate::transition::Transition;
 use crate::widget::Widget;
@@ -48,7 +48,7 @@ impl WipeDatabaseStateItem {
 }
 
 impl StateItem for WipeDatabaseStateItem {
-	fn display(&self, context: &mut TerminalContext) {
+	fn display(&self, context: &mut TerminalContextOld) {
 		let center_y = context.get_height() / 2;
 		let center_x = context.get_width() / 2;
 		match self.wipe_state {

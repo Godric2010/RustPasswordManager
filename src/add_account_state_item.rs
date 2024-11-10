@@ -1,6 +1,6 @@
 use crate::database_context::DatabaseManager;
 use crate::state_item::{wait_for_seconds, StateItem};
-use crate::terminal_context::{TerminalContext};
+use crate::terminal_context::{TerminalContextOld};
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::sync::{Arc, Mutex};
@@ -48,7 +48,7 @@ impl AddEntryStateItem {
 		}
 	}
 
-	fn show_account_data(&self, show_account: bool, show_email: bool, show_password: bool, context: &mut TerminalContext) {
+	fn show_account_data(&self, show_account: bool, show_email: bool, show_password: bool, context: &mut TerminalContextOld) {
 		context.print_at_position(0, 0, &get_texts().add_account.heading);
 		context.print_at_position(0, 2, &get_texts().account.account_name);
 		if show_account {
@@ -124,7 +124,7 @@ impl AddEntryStateItem {
 }
 
 impl StateItem for AddEntryStateItem {
-	fn display(&self, context: &mut TerminalContext) {
+	fn display(&self, context: &mut TerminalContextOld) {
 		match self.internal_state {
 			AddAccountState::SetAccount => {
 				self.show_account_data(false, false, false, context);

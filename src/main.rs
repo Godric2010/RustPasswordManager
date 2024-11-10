@@ -1,5 +1,10 @@
-use crate::terminal_context::TerminalContext;
+use crate::terminal_context::TerminalContextOld;
 use crossterm::terminal::size;
+use crossterm_input::TerminalInput;
+use crate::logic::controller::Controller;
+use crate::logic::test_controller::TestController;
+use crate::models::account_model::Account;
+use crate::terminal::terminal_context::TerminalContext;
 
 mod state_item;
 mod startup_state_item;
@@ -22,21 +27,35 @@ mod page_list_view;
 mod texts;
 mod password_widget;
 mod widget;
+mod views;
+mod logic;
+mod events;
+mod models;
+mod utilities;
+mod widgets;
+mod terminal;
 
 fn main() {
 	println!("cargo:rustc-link-lib=sqlcipher");
 
-	texts::init_texts();
+	// texts::init_texts();
+	//
+	// if let Some(mut context) = create_terminal_context() {
+	// 	let mut state_manager = state_manager::StateManager::new();
+	// 	state_manager.run(&mut context);
+	// 	context.destroy();
+	// }
 
-	if let Some(mut context) = create_terminal_context() {
-		let mut state_manager = state_manager::StateManager::new();
-		state_manager.run(&mut context);
-		context.destroy();
-	}
+	let mut terminal = TerminalContext::new(0, 0, 100, 20);
+	let mut account = Account::new(0, String::from("Test account"), String::from("Test password"), None, None);
 
+	let controller = TestController::new(&mut account);
+
+	let view = &controller.render();
+	terminal.render_view(&view);
 }
 
-fn create_terminal_context() -> Option<TerminalContext> {
+fn create_terminal_context() -> Option<TerminalContextOld> {
 	let (terminal_width, terminal_height) = size().expect("Could not read terminal size");
 	let min_width: u16 = 60;
 	let min_height: u16 = 20;
@@ -58,6 +77,6 @@ fn create_terminal_context() -> Option<TerminalContext> {
 	let origin_x = (terminal_width - frame_width) / 2;
 	let origin_y = (terminal_height - frame_height) / 2;
 
-	let context = TerminalContext::new(origin_x, origin_y, frame_width, frame_height);
+	let context = TerminalContextOld::new(origin_x, origin_y, frame_width, frame_height);
 	Some(context)
 }

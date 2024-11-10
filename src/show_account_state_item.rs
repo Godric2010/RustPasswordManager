@@ -2,7 +2,7 @@ use crate::clipboard_controller::ClipboardController;
 use crate::database_context::{Account, DatabaseManager};
 use crate::input_handler::evaluate_yes_no_answer;
 use crate::state_item::StateItem;
-use crate::terminal_context::{StyleAttribute, TerminalContext};
+use crate::terminal_context::{StyleAttribute, TerminalContextOld};
 use crate::transition::Transition;
 use crossterm::event::KeyCode;
 use std::cmp::PartialEq;
@@ -43,7 +43,7 @@ impl ShowAccountStateItem {
 		}
 	}
 
-	fn show_account(&self, context: &mut TerminalContext) {
+	fn show_account(&self, context: &mut TerminalContextOld) {
 		self.show_account_name(context, false);
 		self.show_email(context, false);
 		self.show_password(context, false);
@@ -74,7 +74,7 @@ impl ShowAccountStateItem {
 		}
 	}
 
-	fn show_copy_password(&self, context: &mut TerminalContext) {
+	fn show_copy_password(&self, context: &mut TerminalContextOld) {
 		self.show_account_name(context, false);
 		self.show_email(context, false);
 		self.show_password(context, false);
@@ -89,7 +89,7 @@ impl ShowAccountStateItem {
 		};
 	}
 
-	fn show_save_changes(&self, context: &mut TerminalContext) {
+	fn show_save_changes(&self, context: &mut TerminalContextOld) {
 		self.show_account_name(context, false);
 		self.show_email(context, false);
 		self.show_password(context, false);
@@ -123,7 +123,7 @@ impl ShowAccountStateItem {
 		}
 	}
 
-	fn show_edit_accountname(&self, context: &mut TerminalContext) {
+	fn show_edit_accountname(&self, context: &mut TerminalContextOld) {
 		self.show_account_name(context, true);
 		self.show_email(context, false);
 		self.show_password(context, false);
@@ -139,7 +139,7 @@ impl ShowAccountStateItem {
 		self.account.account_name = account_name;
 	}
 
-	fn show_edit_password_name(&self, context: &mut TerminalContext) {
+	fn show_edit_password_name(&self, context: &mut TerminalContextOld) {
 		self.show_account_name(context, false);
 		self.show_email(context, false);
 		self.show_password(context, true);
@@ -156,7 +156,7 @@ impl ShowAccountStateItem {
 		self.account.password = password;
 	}
 
-	fn show_edit_email(&self, context: &mut TerminalContext) {
+	fn show_edit_email(&self, context: &mut TerminalContextOld) {
 		self.show_account_name(context, false);
 		self.show_email(context, true);
 		self.show_password(context, false);
@@ -178,7 +178,7 @@ impl ShowAccountStateItem {
 		self.account.email = Some(email);
 	}
 
-	fn show_delete_account(&self, context: &mut TerminalContext) {
+	fn show_delete_account(&self, context: &mut TerminalContextOld) {
 		self.show_account_name(context, false);
 		self.show_email(context, false);
 		self.show_password(context, false);
@@ -203,7 +203,7 @@ impl ShowAccountStateItem {
 		}
 	}
 
-	fn show_account_name(&self, context: &mut TerminalContext, highlighted: bool) {
+	fn show_account_name(&self, context: &mut TerminalContextOld, highlighted: bool) {
 		if highlighted {
 			context.print_styled_at_position(0, 2, &get_texts().account.account_name, StyleAttribute::Bold);
 			context.print_styled_at_position(0, 3, &self.account.account_name, StyleAttribute::InverseColor);
@@ -213,7 +213,7 @@ impl ShowAccountStateItem {
 		}
 	}
 
-	fn show_email(&self, context: &mut TerminalContext, highlighted: bool) {
+	fn show_email(&self, context: &mut TerminalContextOld, highlighted: bool) {
 		let email = match &self.account.email {
 			Some(email) => email,
 			None => "",
@@ -227,7 +227,7 @@ impl ShowAccountStateItem {
 		}
 	}
 
-	fn show_password(&self, context: &mut TerminalContext, highlighted: bool) {
+	fn show_password(&self, context: &mut TerminalContextOld, highlighted: bool) {
 		if highlighted {
 			context.print_styled_at_position(0, 8, &get_texts().account.password, StyleAttribute::Bold);
 			self.password_widget.display(context, 0, 9);
@@ -256,7 +256,7 @@ impl ShowAccountStateItem {
 }
 
 impl StateItem for ShowAccountStateItem {
-	fn display(&self, context: &mut TerminalContext) {
+	fn display(&self, context: &mut TerminalContextOld) {
 		context.print_styled_at_position(0, 0, &get_texts().show_account.heading, StyleAttribute::Underline);
 
 		let internal_state = self.internal_state.lock().unwrap();
