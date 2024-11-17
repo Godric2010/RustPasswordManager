@@ -1,10 +1,9 @@
-use std::rc::Rc;
 use std::time::SystemTime;
 
 #[derive(Debug, Clone)]
 pub struct Account{
 	pub id: i32,
-	pub account_name: Rc<String>,
+	pub account_name: String,
 	pub password: String,
 	pub email: Option<String>,
 	pub notes: Option<String>,
@@ -15,7 +14,7 @@ impl Account{
 	pub fn new(id: i32, account_name: String, password: String, email: Option<String>, notes: Option<String>) -> Self{
 		Self{
 			id,
-			account_name: Rc::new(account_name),
+			account_name,
 			password,
 			email,
 			notes,

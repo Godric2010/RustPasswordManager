@@ -1,22 +1,24 @@
+use std::cell::RefCell;
 use crate::logic::controller::Controller;
 use crate::models::account_model::Account;
 use crate::views::test_view::TestView;
 use crate::views::view::View;
 
-pub struct TestController<'account> {
-	account: &'account mut Account,
+pub struct TestController {
+	account: RefCell<Account>,
 }
-impl<'account> TestController<'account> {
-	pub fn new(model: &'account mut Account) -> Self {
+impl TestController {
+	pub fn new(model: &RefCell<Account>) -> Self {
 		TestController {
-			account: model,
+			account: model.clone(),
 		}
 	}
 }
 
-impl<'account> Controller<'account> for TestController<'account> {
-	fn render(&'account self) -> Box<dyn View + 'account> {
-		let view = TestView::new(&self.account);
+impl Controller for TestController {
+	fn render(&self) -> Box<dyn View> {
+		let model_borrow = self.account.borrow();
+		let view = TestView::new(&model_borrow.account_name);
 		Box::new(view)
 	}
 

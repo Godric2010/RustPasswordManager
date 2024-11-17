@@ -1,10 +1,10 @@
-use crate::terminal_context::TerminalContextOld;
-use crossterm::terminal::size;
-use crossterm_input::TerminalInput;
+use std::cell::RefCell;
 use crate::logic::controller::Controller;
 use crate::logic::test_controller::TestController;
 use crate::models::account_model::Account;
 use crate::terminal::terminal_context::TerminalContext;
+use crate::terminal_context::TerminalContextOld;
+use crossterm::terminal::size;
 
 mod state_item;
 mod startup_state_item;
@@ -47,12 +47,12 @@ fn main() {
 	// }
 
 	let mut terminal = TerminalContext::new(0, 0, 100, 20);
-	let mut account = Account::new(0, String::from("Test account"), String::from("Test password"), None, None);
+	let mut account = RefCell::new(Account::new(0, String::from("Test account"), String::from("Test password"), None, None));
 
 	let controller = TestController::new(&mut account);
 
-	let view = &controller.render();
-	terminal.render_view(&view);
+	let view = controller.render();
+	terminal.render_view(view);
 }
 
 fn create_terminal_context() -> Option<TerminalContextOld> {

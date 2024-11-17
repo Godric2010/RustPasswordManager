@@ -26,7 +26,7 @@ impl TerminalContext {
 		context
 	}
 
-	pub fn render_view(&mut self, view: &Box<dyn View>) {
+	pub fn render_view(&mut self, view: Box<dyn View >) {
 		self.clear();
 		let widgets = view.render();
 		for widget in widgets {
