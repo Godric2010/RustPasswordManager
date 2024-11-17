@@ -2,7 +2,7 @@
 pub enum RenderStyle {
 	Default,
 	Bold,
-	Italic,
+	Underline,
 	Inverse,
 }
 

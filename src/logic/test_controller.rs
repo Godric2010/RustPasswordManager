@@ -18,7 +18,7 @@ impl TestController {
 impl Controller for TestController {
 	fn render(&self) -> Box<dyn View> {
 		let model_borrow = self.account.borrow();
-		let view = TestView::new(&model_borrow.account_name);
+		let view = TestView::new(&model_borrow);
 		Box::new(view)
 	}
 
